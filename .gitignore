@@ -31,3 +31,30 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+# brackets
+.brackets.json
+.jscodehints.json
+
+# configs
+controllers
+public
+views
+databases
+config
+tmp
+#config-debug
+config-release
+
+# related packages used for dev
+packages/nodee-admin.package
+packages/nodee-admin-languages.package
+packages/nodee-total.package
+
+# angular module sources
+packages/nodee-admin.package/app/angular-modules/src
+packages/nodee-admin.package/app/angular-modules/*.command
+
+# theme sources
+packages/nodee-admin.package/app/theme/src
+packages/nodee-admin.package/app/theme/*.command
