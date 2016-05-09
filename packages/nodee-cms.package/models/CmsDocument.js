@@ -46,6 +46,9 @@ CmsDoc.onFill(function(doc){
  * defaults
  */
 
+var docCacheDuration = framework.config['cms-documents-caching'];
+if(docCacheDuration === true) docCacheDuration = 1*60*1000; // default 1 minute
+
 CmsDoc.extendDefaults({
     connection:{
         host: framework.config['cms-datasource-host'] || framework.config['datasource-primary-host'],
@@ -57,22 +60,33 @@ CmsDoc.extendDefaults({
             url:{ 'url':1 },
             urlName:{ 'urlName':1 },
             published:{ 'published':1 },
-            deleted:{ 'deleted':1 },
             template:{ 'template':1 },
             templateName:{ 'templateName':1 },
             contTemplates:{ 'contTemplates':1 }
         }
     },
-    query:{
-        deleted:{ $ne:true }
-    },
+    query:{},
     options:{
-        softRemove:true,
         storeChildrenCount:true
     },
     cache:{
-        duration:10*60*1000 // default expiration of cached routes and docs is 10 minutes
+        duration: docCacheDuration
     }
+});
+
+/*
+ * Cms Documents Trash
+ */
+
+var CmsDocumentTrash = Model.define('CmsDocumentTrash', [ 'MongoDataSource' ], CmsDoc.getSchema());
+CmsDocumentTrash.extendSchema({ expire:{ date:true } });
+CmsDocumentTrash.extendDefaults(CmsDoc.getDefaults()).extendDefaults({ 
+    connection:{ 
+        collection:'cms_documents_trash',
+        indexes:{
+            expire:{'expire':1, $options:{ expireAfterSeconds: 0 }}
+        }
+    } 
 });
 
 /*
@@ -80,6 +94,7 @@ CmsDoc.extendDefaults({
  */
 
 CmsDoc.init();
+CmsDocumentTrash.init();
 
 /*
  * Document methods
@@ -176,6 +191,31 @@ CmsDoc.on('afterUpdate', function(args, next){ // next([err])
     });
 });
 
+// move document and his children to trash (before default Tree beforeRemove method "removeChildren")
+CmsDoc.on('beforeRemove', { addBefore:'removeChildren' }, function(next){
+    var doc = this;
+    doc.expire = new Date().add('days',14);
+    
+    // get all descendants
+    doc.constructor.collection().find({ ancestors:doc.id }).all(function(err, descs){
+        if(err) return next(new Error((doc.constructor._name)+' on beforeRemove: cannot find descendants of ID "' +doc.id+ '"').cause(err));
+        
+        var ids = [doc.id];
+        for(var i=0;i<descs.length;i++) ids.push(descs[i].id);
+
+        // remove prev document and his descendants in trash to avoid ID duplicity conflict
+        Model('CmsDocumentTrash').collection().findId(ids).remove(function(err){
+            if(err) return next(new Error((doc.constructor._name)+' on beforeRemove: cannot remove descendants from trash of ID "' +doc.id+ '"').cause(err));
+    
+            // move document and all of his descendants to trash
+            Model('CmsDocumentTrash').collection().create([doc].concat(descs), function(err){
+                if(err) return next(new Error((doc.constructor._name)+' on beforeRemove: cannot create descendants in trash of ID "' +doc.id+ '"').cause(err));
+                else next(); // continue to removingChildren
+            });
+        });
+    });
+});
+
 // reset routes cache after Remove
 CmsDoc.on('afterRemove', function(args, next){ // next([err])
     var doc = this;
@@ -183,7 +223,7 @@ CmsDoc.on('afterRemove', function(args, next){ // next([err])
 });
 
 
-// TODO: handle moving documents
+// TODO: handle moving documents - best way is to not move, but create new one and delete old
 //// sync descendants & reset document cache
 //CmsDoc.on('beforeRemove', function(args, next){ // next([err])
 //    var doc = this;

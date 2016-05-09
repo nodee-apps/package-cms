@@ -3,20 +3,25 @@
 var util = require('util'),
     Model = require('nodee-model'),
     viewEngine = require('nodee-view'),
-    eUtils = require('nodee-utils'),
+    neUtils = require('nodee-utils'),
     utils = framework_utils,
-    async = eUtils.async,
-    object = eUtils.object,
+    async = neUtils.async,
+    object = neUtils.object,
     fs = require('fs');
 
 /*
  * Require all models
  */
 require('./models/CmsImage.js');
+require('./models/CmsImageTransmitAPI.js');
 require('./models/CmsTemplate.js');
+require('./models/CmsTemplateTransmitAPI.js');
 require('./models/CmsPublicFile.js');
+require('./models/CmsPublicFileTransmitAPI.js');
 require('./models/CmsDocument.js');
+require('./models/CmsDocumentTransmitAPI.js');
 require('./models/CmsForm.js');
+require('./models/CmsFormTransmitAPI.js');
 
 /*
  * Cms module definition
@@ -404,64 +409,68 @@ Cms.prototype.router = function(extendModel){
     // e.g. //127.0.0.1/content
     var pathName = ctrl.uri.pathname.replace(/\/$/g, ''); // replace last "/";
     
-    var cmsRoutes = admin.config.get('cmsroutes') || [];
-    var params = {}, vars;
-    if(!ctrl.search404) for(var i=0;i<cmsRoutes.length;i++){
-        vars = pathName.match(new RegExp(cmsRoutes[i].regex));
-        if(vars){ // path matched, fill vars
-            vars.shift(); // remove first matched element
-            for(var v=0;v<vars.length;v++) params[ cmsRoutes[i].vars[v] ] = vars[v];
-            pathName = cmsRoutes[i].target;
-            break;
-        }
-    }
-    
-    var urlPath = ctrl.search404 || ('//' + ctrl.uri.hostname + pathName);
-    ctrl.params = params;
-    
-    // check if document exists
-    Model('CmsDocument').collection().cache().find({ url: urlPath }).one(function(err, doc){
-        if(err) ctrl.view500(err);
-        else if(!doc || !doc.published) {
-            if(ctrl.search404) ctrl.view404(); // route, include route to 404, not found, let app handle 404
-            else {
-                ctrl.search404 = '//' + ctrl.uri.hostname + '/404';
-                cms.router.call(ctrl);
+    admin.config.get('cmsroutes', function(err, cmsRoutes){
+        if(err) return ctrl.view500(err);
+        cmsRoutes = cmsRoutes || [];
+        
+        var params = {}, vars;
+        if(!ctrl.search404) for(var i=0;i<cmsRoutes.length;i++){
+            vars = pathName.match(new RegExp(cmsRoutes[i].regex));
+            if(vars){ // path matched, fill vars
+                vars.shift(); // remove first matched element
+                for(var v=0;v<vars.length;v++) params[ cmsRoutes[i].vars[v] ] = vars[v];
+                pathName = cmsRoutes[i].target;
+                break;
             }
         }
-        else if(doc.requireSSL && !ctrl.isSecure){ // redirect to secured protocol
-            ctrl.redirect(ctrl.uri.href.replace(/^(http)/,'https'));
-        }
-        //else if(doc.internalRedirect){ // run internal redirect
-        //    cms.router.apply(ctrl, params);
-        //}
-        else { // route found, check roles
-            
-            // extend model if it is defined
-            if(extendModel && object.isObject(extendModel)) object.extend(true, doc, extendModel);
-            
-            if((doc.denyRoles.length || doc.allowRoles.length) && !ctrl.user){
-                // unauthorized request, let app handle 403
-                ctrl.view403();
-            }
-            else if((doc.denyRoles.length || doc.allowRoles.length) && ctrl.user){
-                // authorized request, check roles
-                for(var i=0;i<doc.denyRoles.length;i++){
-                    if((ctrl.user.roles || []).indexOf(doc.denyRoles[i])){
-                        ctrl.view403(); // user has one of disabled roles, let app handle 403
-                        return;
-                    }
+
+        var urlPath = ctrl.search404 || ('//' + ctrl.uri.hostname + pathName);
+        ctrl.params = params;
+
+        // check if document exists
+        Model('CmsDocument').collection().cache().find({ url: urlPath }).one(function(err, doc){
+            if(err) ctrl.view500(err);
+            else if(!doc || !doc.published) {
+                if(ctrl.search404) ctrl.view404(); // route, include route to 404, not found, let app handle 404
+                else {
+                    ctrl.search404 = '//' + ctrl.uri.hostname + '/404';
+                    cms.router.call(ctrl);
                 }
-                for(var i=0;i<doc.allowRoles.length;i++){
-                    if((ctrl.user.roles || []).indexOf(doc.allowRoles[i])){
-                        cms.view(ctrl, doc); // user has one of allowed roles, continue routing
-                        return;
-                    }
-                }
-                ctrl.view403(); // user has none of allowed roles, let app handle 403
             }
-            else cms.view(ctrl, doc);
-        }
+            else if(doc.requireSSL && !ctrl.isSecure){ // redirect to secured protocol
+                ctrl.redirect(ctrl.uri.href.replace(/^(http)/,'https'));
+            }
+            //else if(doc.internalRedirect){ // run internal redirect
+            //    cms.router.apply(ctrl, params);
+            //}
+            else { // route found, check roles
+
+                // extend model if it is defined
+                if(extendModel && object.isObject(extendModel)) object.extend(true, doc, extendModel);
+
+                if((doc.denyRoles.length || doc.allowRoles.length) && !ctrl.user){
+                    // unauthorized request, let app handle 403
+                    ctrl.view403();
+                }
+                else if((doc.denyRoles.length || doc.allowRoles.length) && ctrl.user){
+                    // authorized request, check roles
+                    for(var i=0;i<doc.denyRoles.length;i++){
+                        if((ctrl.user.roles || []).indexOf(doc.denyRoles[i])){
+                            ctrl.view403(); // user has one of disabled roles, let app handle 403
+                            return;
+                        }
+                    }
+                    for(var i=0;i<doc.allowRoles.length;i++){
+                        if((ctrl.user.roles || []).indexOf(doc.allowRoles[i])){
+                            cms.view(ctrl, doc); // user has one of allowed roles, continue routing
+                            return;
+                        }
+                    }
+                    ctrl.view403(); // user has none of allowed roles, let app handle 403
+                }
+                else cms.view(ctrl, doc);
+            }
+        });
     });
 };
 
@@ -561,7 +570,7 @@ function install(){
         name: 'Cms Routes',
         description: 'Dynamic Routing bsed on Path Parameters like "/products/{productId}/*"',
         templateUrl: 'views/cms-config-routes.html',
-        icon: 'fa-exchange',
+        icon: 'fa-map-signs',
         array: true, // will be validated as array of Models
         keyValue: false, // will be validated as key - Model
         defaultValue:[],
@@ -694,13 +703,13 @@ function install(){
         { route:'/', collection:'all', flags:[ 'get' ], count:true },
         { route:'/exists', collection:'exists', flags:['get'] },
         { route:'/{id}', collection:'one', flags:[ 'get' ] },
-        { route:'/', instance:'create', before:disableSort, flags:[ 'post', 'json' ] },
+        { route:'/', instance:'create', afterValidation:disableSort, flags:[ 'post', 'json', length:500 ] },
         //{ route:'/{id}', instance:'create', flags:[ 'post', 'json' ] },
-        { route:'/{id}', instance:'update', before:disableSort, flags:[ 'put', 'json' ] }, // TODO: dont allow update templateSettings to non admin users
+        { route:'/{id}', instance:'update', afterValidation:disableSort, flags:[ 'put', 'json' ], length:500 }, // TODO: dont allow update templateSettings to non admin users
         { route:'/{id}', instance:'remove', flags:[ 'delete' ] },
         
         // change sortOrder position
-        { route:'/{id}/position', instance:'update', flags:[ 'put', 'json' ] }
+        { route:'/{id}/position', instance:'update', flags:[ 'put', 'json' ], length:500 }
         
     ], ['authorize','!admin','!cms','!cmscontent']);
     
@@ -836,12 +845,40 @@ function install(){
         //{ route:'/', instance:'create', flags:[ 'post', 'json' ] },
         { route:'/{id}', instance:'create', flags:[ 'post', 'json' ] },
         { route:'/{id}', instance:'update', flags:[ 'put', 'json' ] },
-        { route:'/{id}', instance:'remove', flags:[ 'delete' ] },
+        { route:'/{id}', instance:'remove', afterValidation:checkTemplateUsage, success:removeTemplateFiles, flags:[ 'delete' ] },
         
         { route:'/{id}/content', instance:'getContent', flags:[ 'get' ] },
-        { route:'/{id}/updatecontent', instance:'updateContent', flags:[ 'post', 'json' ] },
+        { route:'/{id}/updatecontent', instance:'updateContent', flags:[ 'post', 'json' ], length:1000 }, // 1000 kB
         
     ], ['authorize','!admin','!cms']);
+    
+    function checkTemplateUsage(ctx, next){
+        var ctrl = this;
+        var template = ctx.model;
+        
+        Model('CmsDocument').collection().find({ $or:[{ template:template.id },{ contTemplates:template.id }] }).one(function(err, doc){
+            if(err) next(err);
+            else if(doc) next(new Error('Cannot remove template, one or more documents are using it').details({ code:'EXECFAIL' }));
+            else next();
+        });
+    }
+    
+    function removeTemplateFiles(statusCode, resData){
+        var templateId = this.params.id;
+        if(statusCode !== 200) return;
+        
+        Model('CmsTemplate').collection().findId(templateId+'.json').one(function(err, jsonFile){
+            if(jsonFile) jsonFile.remove(function(err){
+                if(err) console.warn('Cannot remove template file "' +templateId+'.json'+ '"', err);
+            });
+        });
+        
+        Model('CmsTemplate').collection().findId(templateId+'.js').one(function(err, jsFile){
+            if(jsFile) jsFile.remove(function(err){
+                if(err) console.warn('Cannot remove template file "' +templateId+'.js'+ '"', err);
+            });
+        });
+    }
     
     framework.route(basePath+'cms/templates/types/{type}', getList, ['get','authorize','!admin','!cms','!cmscontent']);
     function getList(type){
@@ -990,7 +1027,7 @@ function install(){
     ], ['authorize','!admin']);
     
     // read file content
-    framework.route(basePath+'cms/files/{id}/read', readFile, ['get','authorize','!admin']);
+    framework.route(basePath+'cms/files/{id}/read', readFile, ['get','authorize','!admin','!cms']);
     function readFile(){
         var ctrl = this;
         
@@ -1010,7 +1047,7 @@ function install(){
     }
     
     // file upload
-    framework.route(basePath+'cms/files', createFile, ['upload','authorize','!admin'], 3000); // 3 000 kB
+    framework.route(basePath+'cms/files', createFile, ['upload','authorize','!admin','!cms'], 3000); // 3 000 kB
     function createFile(){
         var ctrl = this;
         if(ctrl.files.length > 0){
@@ -1019,13 +1056,16 @@ function install(){
                     id: ctrl.body.id,
                     name: ctrl.files[0].filename,
                     ancestors: (ctrl.body.ancestors||'').split(','),
-                    content: data,
+                    data: data,
                     mimeType: ctrl.files[0].type,
                     ext: (ctrl.files[0].filename||'').split('.').pop()
                 });
                 
                 file.validate();
-                if(file.isValid()) file.create(framework.rest.handleResponse(ctrl));
+                if(file.isValid()) checkFileName(file, function(err, file){
+                    if(err) return ctrl.view500(err);
+                    file.create(framework.rest.handleResponse(ctrl));
+                });
                 else {
                     ctrl.status = 400;
                     ctrl.json({ data:file.validErrs() });
@@ -1036,6 +1076,21 @@ function install(){
             ctrl.status = 400;
             ctrl.json({ data:{ data:['invalid'] } });
         }
+    }
+    
+    // helper for checking if file already exists, if so add ({number}) to the end of file name
+    function checkFileName(file, next){
+        file.fullPath = Model('CmsPublicFile').getDefaults().connection.dirPath + '/' + file.id;
+        
+        neUtils.fsExt.checkExistsName(file.fullPath, false, function(err, fullPath){
+            if(err) return next(err);
+
+            var oldFileName = file.fullPath.split('/').pop();
+            var newFileName = fullPath.split('/').pop();
+            file.id = file.id.replace(new RegExp(oldFileName.escape() + '$'), newFileName);
+            file.fullPath = fullPath;
+            next(null, file);
+        });
     }
     
     /*
@@ -1073,7 +1128,15 @@ function install(){
     ], ['authorize','!admin']);
     
     // publish mailers list from admin.config
-    framework.route(basePath+'cms/forms/mailerslist', function(){ this.json({ data: Object.keys(admin.config.get('mailers')||{}) }); }, ['get','authorize','!admin']);
+    framework.route(basePath+'cms/forms/mailerslist', getMailersList, ['get','authorize','!admin']);
+    
+    function getMailersList(){
+        var ctrl = this;
+        admin.config.get('mailers', function(err, mailersCfg){
+            if(err) return ctrl.view500(err);
+            ctrl.json({ data: Object.keys(mailersCfg||{}) });
+        });
+    }
     
     // public form submit as json
     framework.route(basePath+'cms/forms/fieldtypes', function(){ this.json({ data:cms.forms }); }, ['get','authorize','!admin']);
@@ -1144,49 +1207,54 @@ function install(){
                 });
             }
             
-            // send email if needed
-            for(var i=0;i<(form.emails||[]).length;i++){
-                var email = form.emails[i];
-                var propName = email.propName;
-                var sendOn = email.sendOn;
+            admin.config.get('mailers', function(err, mailersCfg){
+                if(err) return ctrl.view500(err);
                 
-                if(propName && sendOn && sendOn!=='never'){
-                    
-                    // check if property defined / changed / always
-                    if(sendOn==='always' ||
-                       (sendOn==='define' && (!compared || compared[propName]==='define')) ||
-                       (sendOn==='change' && compared && compared[propName]==='change')){
-                        
-                        (function(email){
-                            Model('CmsDocument').collection().cache().find({ url: email.documentUrl }).one(function(err, doc){
-                                if(err) handleMailSent(err);
-                                else if(!doc) handleMailSent(new Error('CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
-                                else {
-                                    doc.$brackets = entry.data;
-                                    cms.view(doc, function(err, html){
-                                        if(err) handleMailSent(err);
-                                        else framework.sendMail({
-                                            to: eUtils.template.render(email.to||'', entry.data),
-                                            cc: eUtils.template.render(email.cc||'', entry.data),
-                                            bcc: eUtils.template.render(email.bcc||'', entry.data),
-                                            subject: eUtils.template.render(email.subject||'', entry.data),
-                                            model: doc,
-                                            body: html,
-                                            config: (admin.config.get('mailers')||{})[ email.mailer ]
-                                            
-                                        }, handleMailSent);
-                                    });
-                                }
-                            });
-                        })(email);
+                // send email if needed
+                for(var i=0;i<(form.emails||[]).length;i++){
+                    var email = form.emails[i];
+                    var propName = email.propName;
+                    var sendOn = email.sendOn;
+
+                    if(propName && sendOn && sendOn!=='never'){
+
+                        // check if property defined / changed / always
+                        if(sendOn==='always' ||
+                           (sendOn==='define' && (!compared || compared[propName]==='define')) ||
+                           (sendOn==='change' && compared && compared[propName]==='change')){
+
+                            (function(email){
+                                Model('CmsDocument').collection().cache().find({ url: email.documentUrl }).one(function(err, doc){
+                                    if(err) handleMailSent(err);
+                                    else if(!doc) handleMailSent(new Error('CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
+                                    else {
+                                        doc.$brackets = entry.data;
+                                        cms.view(doc, function(err, html){
+                                            if(err) handleMailSent(err);
+                                            else framework.sendMail({
+                                                to: neUtils.template.render(email.to||'', entry.data),
+                                                cc: neUtils.template.render(email.cc||'', entry.data),
+                                                bcc: neUtils.template.render(email.bcc||'', entry.data),
+                                                subject: neUtils.template.render(email.subject||'', entry.data),
+                                                model: doc,
+                                                body: html,
+                                                config: (mailersCfg||{})[ email.mailer ]
+
+                                            }, handleMailSent);
+                                        });
+                                    }
+                                });
+                            })(email);
+                        }
                     }
                 }
-            }
-            
-            // response
-            if(ctrl.flags.indexOf('json')>-1) framework.rest.handleResponse(ctrl)(err);
-            else if(form.redirect) ctrl.redirect(form.redirect);
-            else cms.router.call(ctrl, { $form:{ data:entry.getData(), validErrs:entry.validErrs() } });
+
+                // response
+                if(ctrl.flags.indexOf('json')>-1) framework.rest.handleResponse(ctrl)(err);
+                else if(form.redirect) ctrl.redirect(form.redirect);
+                else cms.router.call(ctrl, { $form:{ data:entry.getData(), validErrs:entry.validErrs() } });
+                
+            });
         }
     }
     

@@ -35,6 +35,23 @@ PublicFile.extendDefaults({
 });
 
 /*
+ * Backup options
+ */
+PublicFile.backupCreateHooks = ['create'];
+PublicFile.backupUpdateHooks = ['update','write'];
+PublicFile.backupRemoveHooks = ['remove'];
+PublicFile.backupFields = { data:true };
+// if removing folders, it removes all child items, therefore we need to send backup service order to remove all descendants
+PublicFile.backupRemoveBulk = function(query, instance){
+    return {
+        $or:[
+            { 'data.ancestors': instance.id },
+            { originalId: query.originalId }
+        ]
+    };
+};
+
+/*
  * Ensure Indexes, etc...
  */
 PublicFile.init(function(){

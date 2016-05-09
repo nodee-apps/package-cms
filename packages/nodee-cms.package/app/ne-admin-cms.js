@@ -226,7 +226,7 @@ angular.module('neAdmin.cms',['neRest',
                 },
                 !item.isFile, // if item is directory, append it to tree
                 function(){
-                    if($scope.folder && $scope.folder.id === parent.id) $scope.grid.setPage('first');
+                    if(parent && $scope.folder && $scope.folder.id === parent.id) $scope.grid.setPage('first');
                     modals.get('cms.files.create').hide();
                 });
             },

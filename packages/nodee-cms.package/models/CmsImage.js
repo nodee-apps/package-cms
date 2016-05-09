@@ -12,7 +12,7 @@ var Image = Model.define('CmsImage', [ 'MongoDataSource' ], {
     name:{ isString:true },
     originalId:{ isString:true },
     type:{ isIn:['original','resized','cropped'] }, // original,resized,croped
-    data:{ hidden:true },
+    data:{ buffer:true }, // data buffer
     height:{ isInteger:true },
     width:{ isInteger:true },
     gravity:{ isString:true },
@@ -56,6 +56,7 @@ Image.extendDefaults({
             bg_color:1,
             mimeType:1,
             ext:1,
+            length:1,
             expire:1
         }
     }

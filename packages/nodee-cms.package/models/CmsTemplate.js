@@ -19,6 +19,23 @@ Template.extendDefaults({
 });
 
 /*
+ * Backup options
+ */
+Template.backupCreateHooks = ['create'];
+Template.backupUpdateHooks = ['update','write'];
+Template.backupRemoveHooks = ['remove'];
+Template.backupFields = { content:true };
+// if removing folders, it removes all child items, therefore we need to send backup service order to remove all descendants
+Template.backupRemoveBulk = function(query, instance){
+    return {
+        $or:[
+            { 'data.ancestors': instance.id },
+            { originalId: query.originalId }
+        ]
+    };
+};
+
+/*
  * Ensure Indexes
  */
 Template.init();
@@ -127,16 +144,18 @@ Template.prototype.updateContent = function(contents, cb){ // cb(err, template)
         return cb(new Error('Template updateContent: content is not valid JSON').details({ code:'EXECFAIL', cause:err }));
     }
     
+    template.content = contents.html;
+    
     // update html file
     template.write(contents.html, function(err, template){
-        if(err) cb(err);
+        if(err) return cb(err);
         
-        // update json file
-        else fs.writeFile(template.fullPath+'.json', json, function(err){
-            if(err) cb(err);
+        // update json file, but bypass optimistic lock
+        template.constructor.new({ id:template.id+'.json' }).write(json, { optimisticLock:false }, function(err){
+            if(err) return cb(err);
             
-            // update js file
-            else fs.writeFile(template.fullPath+'.js', buildTemplateJs(contents), function(err){
+            // update js file, but bypass optimistic lock
+            template.constructor.new({ id:template.id+'.js' }).write(buildTemplateJs(contents), { optimisticLock:false }, function(err){
                 if(err) cb(err);
                 else cb(null, template);
             });
@@ -187,23 +206,3 @@ function buildTemplateJs(contents){
 /*
  * Business logic
  */
-
-Template.on('beforeRemove', function(next){
-    var template = this;
-    
-    Model('CmsDocument').collection().find({ $or:[{ template:template.id },{ contTemplates:template.id }] }).one(function(err, doc){
-        if(err) next(err);
-        else if(doc) next(new Error('Cannot remove template, one or more documents are using it').details({ code:'EXECFAIL' }));
-        else next();
-    });
-});
-
-Template.on('afterRemove', function(args, next){
-    var template = this;
-    
-    template.constructor.collection().findId(template.id+'.json').remove(function(err){
-        template.constructor.collection().findId(template.id+'.js').remove(function(err){
-            next();
-        });
-    });
-});

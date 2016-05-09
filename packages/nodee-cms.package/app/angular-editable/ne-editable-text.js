@@ -7,8 +7,7 @@ angular.module('neEditable.text', ['neEditable','neContentEditors','neModals'])
             markdown: ($scope.container.editors.richtext || {}).markdown,
             html: ($scope.container.editors.richtext || {}).html
         };
-        $scope.show.mode =  ($scope.container.editors.richtext || {}).defaultMode ||
-                            ($scope.container.editors.richtext || {}).mode;
+        $scope.show.mode = ($scope.container.editors.richtext || {}).defaultMode || ($scope.container.editors.richtext || {}).mode;
         
         if(!$scope.show.mode && $scope.show.wysiwyg) $scope.show.mode = 'wysiwyg';
         if(!$scope.show.mode && $scope.show.markdown) $scope.show.mode = 'markdown';
@@ -44,34 +43,34 @@ angular.module('neEditable.text', ['neEditable','neContentEditors','neModals'])
     };
     
     $scope.mdEditor = markdown.editor;
-    $scope.mdEditor.insertImage = function(selection){
+    $scope.mdInsertImage = function(selection){
         insertImage(selection, function(url){
             $scope.updateMD(markdown.editor.image(selection, url));
         });
     };
-    $scope.mdEditor.insertLink = function(selection){
+    $scope.mdInsertLink = function(selection){
         insertLink(selection, function(url, name){
             $scope.updateMD(markdown.editor.link(selection, url, name));
         });
     };
-    $scope.mdEditor.insertTable = function(selection){
+    $scope.mdInsertTable = function(selection){
         insertTable(selection, function(cols, rows){
             $scope.updateMD(markdown.editor.table(selection, cols, rows));
         });
     };
     
     $scope.wsEditor = wysiwyg.editor;
-    $scope.wsEditor.insertImage = function(selection){
+    $scope.wsInsertImage = function(selection){
         insertImage(selection, function(url){
             $scope.updateHTML(wysiwyg.editor.image(selection, url));
         });
     };
-    $scope.wsEditor.insertLink = function(selection){
+    $scope.wsInsertLink = function(selection){
         insertLink(selection, function(url, name){
             $scope.updateHTML(wysiwyg.editor.link(selection, url, name));
         });
     };
-    $scope.wsEditor.insertTable = function(selection){
+    $scope.wsInsertTable = function(selection){
         insertTable(selection, function(cols, rows){
             $scope.updateHTML(wysiwyg.editor.table(selection, cols, rows));
         });
