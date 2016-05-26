@@ -70,7 +70,7 @@ function Cms(){
                 template:basePath+'views/cms-editable-image.html',
                 name:'image',
                 description:'edit image src',
-                settings:{ width:0, widthAuto:false, height:0, heightAuto:false, crop:false, bg_color:'', attr:'src', valueAsId:false }
+                settings:{ valueAsId:false, width:0, widthAuto:false, height:0, heightAuto:false, crop:false, bg_color:'', attr:'src' }
             }
         };
 
@@ -103,7 +103,7 @@ function Cms(){
                 template:basePath+'views/cms-attribute-image.html',
                 name:'image',
                 description:'image input, data is image src',
-                settings:{ value:'', height:100, autoHeight:false, width:100, autoWidth:false, crop:true, required:false, bg_color: '', valueAsId:false }
+                settings:{ valueAsId:true, value:'', height:100, autoHeight:false, width:100, autoWidth:false, crop:true, required:false, bg_color:'' }
             },
             //dateTime:{
             //    template:basePath+'views/cms-attribute-datetime.html',
@@ -703,7 +703,7 @@ function install(){
         { route:'/', collection:'all', flags:[ 'get' ], count:true },
         { route:'/exists', collection:'exists', flags:['get'] },
         { route:'/{id}', collection:'one', flags:[ 'get' ] },
-        { route:'/', instance:'create', afterValidation:disableSort, flags:[ 'post', 'json', length:500 ] },
+        { route:'/', instance:'create', afterValidation:disableSort, flags:[ 'post', 'json' ], length:500 },
         //{ route:'/{id}', instance:'create', flags:[ 'post', 'json' ] },
         { route:'/{id}', instance:'update', afterValidation:disableSort, flags:[ 'put', 'json' ], length:500 }, // TODO: dont allow update templateSettings to non admin users
         { route:'/{id}', instance:'remove', flags:[ 'delete' ] },
