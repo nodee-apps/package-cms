@@ -1262,9 +1262,9 @@ angular.module('neAdmin.cms',['neRest',
             
             $scope.document = item;
             $scope.document.attributes = $scope.document.attributes || {};
-            
+
             cms.templates.meta({id:item.template, documentId:item.id }, function(data){
-                
+
                 // extend mappings
                 editable.mappings = extendMappings(data.mappings, $scope.document.templateSettings);
                 editable.markNotDirty();
@@ -1276,6 +1276,35 @@ angular.module('neAdmin.cms',['neRest',
             });
         }
     }).load();
+    
+    $scope.tree.focusItemModal = function(item){
+        if(!$scope.canUpdateDocument()) return $scope.tree.focusItem(item);
+        if($scope.document === item) return;
+        
+        modals.create({
+            id:'cms.documents.changed',
+            title:'Document Changed',
+            text:'Document Content Changed. Switch to another will discard all changes. Are you sure ?',
+            buttons:[
+                { text:'Cancel', css:'btn btn-default', disabled:false, click: function(){ 
+                        modals.get('cms.documents.changed').hide();
+                    } 
+                },
+                { text:'Continue Without Saving', css:'btn btn-primary', disabled:false ,click: function(){
+                        modals.get('cms.documents.changed').hide();
+                        $scope.tree.focusItem(item);
+                    }
+                },
+                { text:'Save And Continue', css:'btn btn-primary', disabled:false ,click: function(){
+                        $scope.updateDocument(function(){
+                            modals.get('cms.documents.changed').hide();
+                            $scope.tree.focusItem(item);
+                        });
+                    }
+                }
+            ]
+        });
+    };
     
     $scope.tree.dropBefore = function(target){
         if($scope.tree.$dragged.ancestors.join(',')!==target.ancestors.join(',') || target===$scope.tree.$dragged) return;
@@ -1765,7 +1794,7 @@ angular.module('neAdmin.cms',['neRest',
         return attributes;
     }
     
-    $scope.updateDocument = function(){
+    $scope.updateDocument = function(cb){
         var attrs = setAttributes($scope.attributes);
         
         cms.documents.content({
@@ -1779,6 +1808,7 @@ angular.module('neAdmin.cms',['neRest',
             $scope.document.modifiedDT = data.modifiedDT;
             $scope.attributes = fillAttributes(editable.mappings[0].mapping.attributes, data.attributes); // refill values, and clear dirty marks
             editable.clearAllDirtyMarks();
+            if(cb) cb();
         });
     };
     
@@ -1794,7 +1824,7 @@ angular.module('neAdmin.cms',['neRest',
             include:'views/cms-widgets-create.html',
             widgets: widgets,
             create: function(widget){
-                cms.templates.meta(widget.id, { includeContent:true }, function(data){
+                cms.templates.meta({ id:widget.id, includeContent:true }, function(data){
                     var mappings = extendMappings(data.mappings, $scope.document.templateSettings);
                     editable.createWidget(containerId, widget.id, mappings[0].mapping, data.html);
                     modals.get('cms.widgets.create').hide();

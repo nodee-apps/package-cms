@@ -78,7 +78,11 @@ module.exports = {
         'Insert': 'TRANSLATE',
         'Columns': 'TRANSLATE',
         'Rows': 'TRANSLATE',
-        'Inner Text': 'TRANSLATE'
+        'Inner Text': 'TRANSLATE',
+        'Document Changed': 'TRANSLATE',
+        'Document Content Changed. Switch to another will discard all changes. Are you sure ?': 'TRANSLATE',
+        'Continue Without Saving': 'TRANSLATE',
+        'Save And Continue': 'TRANSLATE'
     },
 
     /*
