@@ -1,0 +1,10 @@
+<div>
+    <form class="text-center" novalidate>
+        <select class="input-sm" style="width:35%;" ng-options="t as t|translate for t in ['Folder','File']" ng-change="modal.item.isFile=(modal.item.type==='File')" ng-model="modal.item.type"></select>
+        <input type="text" class="input-sm" style="width:55%;" ng-model="modal.item.name" placeholder="{{::'file.css or folder name'|translate}}" required>
+    </form>
+    <div class="text-right margin-top-lg">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-disabled="!modal.item.name" ng-click="modal.create(modal.item)">{{::'Create'|translate}}</button>
+    </div>
+</div>

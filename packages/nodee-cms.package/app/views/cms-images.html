@@ -1,0 +1,81 @@
+
+<div class="row">
+    <div class="col-xs-12 col-sm-5 col-md-4 col-lg-3" ng-hide="sidePanel.collapsed">
+		
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw fa-sitemap"></i> {{::'Documents'|translate}}
+                <div class="pull-right">
+                    <button class="btn btn-sm btn-default" ng-click="selectAll()"> {{::'Search In All'|translate}}</button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div ne-tree="tree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
+
+        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
+            <button class="btn btn-sm btn-default btn-light" 
+                    style="padding:5px" 
+                    ng-click="sidePanel.collapsed=!sidePanel.collapsed">
+                <i class="fa fa-arrows-h"></i>
+            </button>
+        </div>
+            
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <span ng-if="document.id">
+                            <i class="fa fa-fw {{document.icon||'fa-file-o'}}"></i> {{document.title}}
+                        </span>
+                        <span ng-if="!document.id">
+                            {{::'All Documents'|translate}}
+                        </span>
+                        
+                        <span class="pull-right">
+                            <span class="file-upload btn btn-sm btn-default">
+                                <i class="fa fa-folder-open text-muted"></i>
+                                <span class="hidden-xs">{{::'Browse To Upload'|translate}}</span>
+                                <ne-file multiple="true" ng-model="upload.files" ng-change="upload.start(files)"></ne-file>
+                            </span>
+                            <button class="btn btn-danger btn-sm" 
+                                    ng-disabled="!grid.getSelectedItems().length" 
+                                    ng-click="removeSelected()">
+                                <i class="fa fa-fw fa-trash-o"></i> 
+                                <span class="hidden-xs">{{::'Remove Selected'|translate}}</span>
+                            </button>
+                        </span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="panel-body" ne-file-drop-area="image/*" ne-files-drop="upload.start(files)">
+                
+                <div class="row">
+                    <div class="col-xs-12">
+                        <i class="fa fa-5x fa-upload"></i>
+                        <div class="grid-files-item" ng-repeat="item in grid.items">
+                            <div class="grid-files-item-body" ng-class="{selected:item.$selected}" ng-click="grid.selectItem(item)" uib-tooltip="{{item.name}} ({{item.width}}x{{item.height}})">
+                                <img ng-src="/cmsimages/{{item.id}}/cx100x100.{{item.ext}}">
+                            </div>
+                            <a href="/cmsimages/{{item.id}}.{{item.ext}}" target="_blank" class="grid-files-item-link">
+                                <small class="nowrap"><i class="fa fa-fw fa-mail-forward"></i> {{::item.name}}</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+		
+            </div>
+            <div class="panel-footer">
+                <div ne-grid-pagination="grid"></div>
+            </div>
+        </div>
+        
+    </div>
+</div>

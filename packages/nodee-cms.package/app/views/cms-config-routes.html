@@ -1,0 +1,46 @@
+<div class="row" ng-init="item.config.length ? null : item.config.push({})">
+    <table class="table table-hover table-condensed table-transparent margin-bottom-xs">
+        <thead>
+            <tr>
+                <th class="hidden-xs">{{::'Execution Order'|translate}}</th>
+                <th>{{::'Path Template'|translate}}</th>
+                <th>{{::'Path Target'|translate}}</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="route in item.config">
+                <td class="hidden-xs">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-default" disabled="disabled">
+                            <strong>{{$index+1}}</strong>
+                        </button>
+                        <button class="btn btn-default" ng-disabled="$first" ng-click="item.config.splice($index,1);item.config.splice($index-1,0,route)">
+                            <i class="fa fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-default" ng-disabled="$last" ng-click="item.config.splice($index,1);item.config.splice($index+1,0,route)">
+                            <i class="fa fa-arrow-down"></i>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" class="form-control input-sm" ng-model="route.template" placeholder="{{::'/product/{productId}/*'|translate}}" required>
+                </td>
+                <td>
+                    <input type="text" class="form-control input-sm" ng-model="route.target" placeholder="{{::'/product-details'|translate}}" required>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-default" ng-click="item.config.splice($index,1)">
+                        <i class="fa fa-fw fa-trash"></i>
+                        <span class="hidden-xs">{{::'Remove'|translate}}</span>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-center">
+        <button class="btn btn-xs btn-default" ng-click="item.config.push({})">
+            <i class="fa fa-fw fa-plus"></i> {{::'Add Route'|translate}}
+        </button>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+<div>
+    <div>
+        <strong>{{::'Columns'|translate}}</strong><br/>
+        <input type="number" class="form-control" ng-model="modal.table.columns" placeholder="2" /><br/>
+        
+        <strong>{{::'Rows'|translate}}</strong><br/>
+        <input type="number" class="form-control" ng-model="modal.table.rows" placeholder="2" />
+    </div>
+    <div class="text-right margin-top-lg">
+        <button class="btn btn-default btn-mini" ng-click="modal.hide()">{{::'Cancel'|translate}}</button>
+        <button class="btn btn-mini btn-primary" ng-click="modal.insertTable(modal.table.columns || 2, modal.table.rows || 2)">{{::'Insert'|translate}}</button>
+    </div>
+</div>

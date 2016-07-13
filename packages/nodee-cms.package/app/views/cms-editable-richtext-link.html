@@ -1,0 +1,13 @@
+<div>
+    <div>
+        <strong>{{::'Insert Link'|translate}}</strong><br/>
+        <input type="text" class="form-control" ng-model="modal.newLink" placeholder="http://" /><br/>
+        
+        <strong>{{::'Link Name'|translate}} ({{::'optional'|translate}})</strong><br/>
+        <input type="text" class="form-control" ng-model="modal.newLinkName" />
+    </div>
+    <div class="text-right margin-top-lg">
+        <button class="btn btn-default btn-mini" ng-click="modal.hide()">{{::'Cancel'|translate}}</button>
+        <button class="btn btn-mini btn-primary" ng-disabled="!modal.newLink" ng-click="modal.insertLink(modal.newLink, modal.newLinkName)">{{::'Insert'|translate}}</button>
+    </div>
+</div>

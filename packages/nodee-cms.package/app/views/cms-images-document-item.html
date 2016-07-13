@@ -1,0 +1,35 @@
+<div class="tree-item" style="padding-right:14px;">
+
+    <div class="tree-item-expander">
+        <i class="fa tree-item-icon" 
+           ng-click="$event.stopPropagation();item.$expanded=!item.$expanded;tree.load(item);" 
+           ng-class="{'fa-plus-square-o':(!item.$expanded && item.childrenCount>0),'fa-minus-square-o':(item.$expanded && item.childrenCount>0)}">
+        </i>
+    </div>
+    
+    <a href=""
+       draggable="false"
+       class="tree-item-link btn btn-default" 
+       ng-style="{'background-color':item.color || '#fff'}" 
+       ne-color-contrast="item.color" 
+       ng-click="tree.focusItem(item)" 
+       ng-class="{'active':item.$focused}">
+        <span class="nowrap">
+            <i class="fa fa-fw {{item.icon||'fa-file-o'}}"></i> {{item.title}}
+        </span>
+    </a>
+    
+    <div ng-if="item.$expanded" class="tree-item-pagination" ng-class="{'tree-item-pagination-border':item.$children.length}">
+        <div ng-if="item.$pagination && !item.$paginationDisabled" class="btn-group btn-group-xs">
+            <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'prev')" ng-disabled="item.$prevDisabled">
+                <i class="fa fa-backward"></i>
+            </button>
+            <button class="btn btn-light btn-xs" ng-click="tree.addPage(item)" ng-disabled="item.$nextDisabled">
+                {{item.$pagination.page}} <span ng-if="item.$pagination.pagesCount">{{::'of'|translate}} {{item.$pagination.pagesCount}}</span>
+            </button>
+            <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'next')" ng-disabled="item.$nextDisabled">
+                <i class="fa fa-forward"></i>
+            </button>
+        </div>
+    </div>
+</div>

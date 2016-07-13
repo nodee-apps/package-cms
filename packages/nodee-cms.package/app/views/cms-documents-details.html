@@ -1,0 +1,57 @@
+<div>
+    <form novalidate>
+        <label>ID </label>
+        <input type="text" class="form-control input-sm" value="{{modal.item.id}}" disabled="disabled">
+        <br>
+            
+        <label>{{::'Template'|translate}}</label>
+        <input type="text" class="form-control input-sm" value="{{modal.item.template}}" disabled="disabled">
+        <br>
+        
+        <label>{{::'Template Name'|translate}}</label>
+        <input type="text" class="form-control input-sm" value="{{modal.item.templateName}}" disabled="disabled">
+        <br>
+        
+        <label>{{::'Icon'|translate}}</label> (<i class="fa fa-fw {{modal.item.icon||'fa-file-o'}}"></i>)
+        <div class="dropdown" uib-dropdown>
+            <input type="text" class="form-control input-sm" ng-model="modal.item.icon" placeholder="fa-file-o" uib-dropdown-toggle>
+            <ul class="dropdown-menu" style="overflow:auto;max-height:200px;">
+                <li class="pull-left" style="width:20px" ng-repeat="icon in modal.faIcons.$toArray()|filter:modal.item.icon">
+                    <a href="" 
+                       style="padding:0px;margin:2px;"
+                       class="text-muted nowrap" 
+                       ng-click="modal.item.icon=icon.icon">
+                        <i class="fa fa-fw {{icon.icon}}"></i>
+                        <!--<small>{{icon.name}}</small>-->
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <br>
+        
+        <label>{{::'Color'|translate}}</label>
+        <div class="dropdown" uib-dropdown>
+            <input type="text" class="form-control input-sm" ng-model="modal.item.color" placeholder="#ffffff" ng-style="{'background-color':modal.item.color}" ne-color-contrast="modal.item.color" uib-dropdown-toggle>
+            <ul class="dropdown-menu">
+                <li>
+                    <div class="margin-sm" style="width:160px">
+                        <a href="" 
+                           class="pull-left visible-block" 
+                           ng-repeat="color in modal.palette256 track by $index" 
+                           ng-click="modal.item.color=color" 
+                           style="width:10px;height:10px"
+                           ng-style="{'background-color':color}">
+                        </a>
+                    </div>
+                    <div class="clearfix"></div>
+                </li>
+            </ul>
+        </div>
+    </form>
+    <hr>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-click="modal.update(modal.item)">{{::'Update'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

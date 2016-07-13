@@ -1,0 +1,11 @@
+<div ng-controller="AttributeImageCtrl">
+    <div class="center" style="margin-top:5px;">
+        <a href="" ng-click="changeImageModal()">
+            <img ng-src="{{getThumbSrc()}}"
+                 on-load="setNaturalWidth(naturalWidth);setNaturalHeight(naturalHeight);"
+                 class="thumbnail"
+                 style="max-width:200px;max-height:200px;margin:0px;"
+                 ng-style="{'width':(attr.settings.width||100)+'px','height':(attr.settings.height||100)+'px'}" />
+        </a>
+    </div>
+</div>

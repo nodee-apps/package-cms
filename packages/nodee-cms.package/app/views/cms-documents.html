@@ -1,0 +1,231 @@
+<script type="text/ng-template" id="views/cms-editable-modal.html">
+    <div class="data" ng-controller="EditableContainerCtrl">
+        <div ng-include="'views/cms-editable-container.html'"></div>
+    </div>
+</script>
+
+<script type="text/ng-template" id="views/cms-editable-container.html">
+    <div>
+        <div class="padding-top-sm" ng-repeat="(key, editor) in container.editors" ng-include="getTemplateName(key)"></div>
+        <div ng-repeat="container in container.children" ng-include="'views/cms-editable-container.html'"></div>
+    </div>
+</script>
+
+<script type="text/ng-template" id="views/cms-documents-item.html">
+    <div class="tree-item" style="padding-right:14px;" draggable drag="tree.$dragged=item">
+        
+        <div class="tree-item-expander">
+            <i class="fa tree-item-icon" 
+               ng-click="item.$expanded=!item.$expanded;tree.load(item);" 
+               ng-class="{'fa-plus-square-o':(!item.$expanded && item.childrenCount>0),'fa-minus-square-o':(item.$expanded && item.childrenCount>0)}">
+            </i>
+        </div>
+
+        <a href="" 
+           draggable="false" 
+           droppable 
+           drop="tree.dropBefore(item)" 
+           class="tree-item-link btn btn-default" 
+           ng-style="{'background-color':item.color || '#fff','border-style':item.published ? 'solid' : 'dashed'}" 
+           ne-color-contrast="item.color" 
+           ng-click="tree.focusItemModal(item)" 
+           ng-class="{'active':item.$focused}">
+            <span class="nowrap">
+                <i ng-if="tree.$dragged.ancestors.join(',')===item.ancestors.join(',')" class="fa fa-fw fa-lg fa-long-arrow-left tree-item-sort-arrow"></i>
+                <i class="fa fa-fw {{item.icon||'fa-file-o'}}"></i> {{item.title}}
+            </span>
+
+            <div ng-click="$event.stopPropagation();$event.preventDefault()" style="width:44px;" class="tree-item-menu btn-group btn-group-xs position-absolute" ng-class="{'visible':item.$focused}">
+                <button ng-click="tree.createModal(item)" class="btn btn-default btn-light btn-xs">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button ng-click="tree.removeModal(item)" class="btn btn-danger btn-light btn-xs">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+            </div>
+        </a>
+        
+        <div ng-if="item.$expanded" class="tree-item-pagination" ng-class="{'tree-item-pagination-border':item.$children.length}">
+            <div ng-if="item.$pagination && !item.$paginationDisabled" class="btn-group btn-group-xs">
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'prev')" ng-disabled="item.$prevDisabled">
+                    <i class="fa fa-backward"></i>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.addPage(item)" ng-disabled="item.$nextDisabled">
+                    {{item.$pagination.page}} <span ng-if="item.$pagination.pagesCount">{{::'of'|translate}} {{item.$pagination.pagesCount}}</span>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'next')" ng-disabled="item.$nextDisabled">
+                    <i class="fa fa-forward"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<div class="row">
+    <div class="col-xs-12 col-sm-5 col-md-4 col-lg-3" ng-hide="sidePanel.collapsed">
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw fa-sitemap"></i> {{::'Sitemap'|translate}}
+                <div class="pull-right">
+                    <button class="pull-right btn btn-sm btn-default" ng-click="tree.createModal()">
+                        <i class="fa fa-plus"></i> {{::'Add Root'|translate}}
+                    </button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div ne-tree="tree"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
+        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
+            <button class="btn btn-sm btn-default btn-light" 
+                    style="padding:5px" 
+                    ng-click="sidePanel.collapsed=!sidePanel.collapsed">
+                <i class="fa fa-arrows-h"></i>
+            </button>
+        </div>
+        
+        <div ng-if="!document" class="panel panel-default">
+            <div class="panel-heading">&nbsp;</div>
+            <div class="panel-body text-center padding-lg">
+                <h1>{{::'Sitemap and Content management'|translate}}</h1>
+                <span>{{::'Create "root page" or select existing in sitemap on left'|translate}}</span>
+            </div>
+        </div>
+
+        <div ng-if="document" class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw {{document.icon||'fa-file-o'}}"></i>
+                <span ng-if="!document.$editDetails">
+                    <a href="" class="text-muted" ng-click="editDetails()">
+                        {{document.title}} ({{document.urlName}})
+                    </a>
+                    <button class="btn btn-default btn-xs" ng-click="editDetails()">
+                        <i class="fa fa-fw fa-pencil"></i>
+                    </button>
+                </span>
+
+                <span ng-if="document.$editDetails">
+                    <input type="text" class="input-sm" ng-model="document.title">
+                    ({{::'Url Name'|translate}} <input type="text" class="input-sm" ng-model="document.urlName">)
+                    <span class="btn-group btn-group-xs">
+                        <button class="btn btn-success" ng-click="tree.updateItem(document,urlModified);"><i class="fa fa-fw fa-check"></i></button>
+                        <button class="btn btn-default" ng-click="editDetails(true)"><i class="fa fa-fw fa-close"></i></button>
+                    </span>
+                </span>
+
+                <div class="pull-right">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="document.published" ng-change="tree.updateItem(document)">
+                        <i class="fa fa-toggle-off text-lg unchecked"></i>
+                        <i class="fa fa-toggle-on checked text-lg text-success"></i>
+                        {{::'Published'|translate}}
+                    </label>
+                    
+                    <div class="btn-group btn-group-sm">
+                        <button ng-if="attributes.length" 
+                                class="btn btn-sm btn-default" 
+                                ng-model="document.$hideAttributes" 
+                                tooltip-placement="bottom" 
+                                uib-tooltip="{{::'Hide Attributes'|translate}}" 
+                                uib-btn-checkbox><i class="fa fa-fw fa-tasks"></i>
+                        </button>
+
+                        <button class="btn btn-sm btn-default" 
+                                ng-if="roles(['admin','cmstemplates'])" 
+                                ng-click="tempSettingsModal(document)" 
+                                tooltip-placement="bottom" 
+                                uib-tooltip="{{::'Template Settings'|translate}}">
+                            <i class="fa fa-fw fa-wrench"></i>
+                        </button>
+
+                        <button class="btn btn-sm btn-default" 
+                                ng-click="detailsModal(document)" 
+                                tooltip-placement="bottom" 
+                                uib-tooltip="{{::'Details'|translate}}">
+                            <i class="fa fa-fw fa-info"></i>
+                        </button>
+                        
+                        <!--
+                        <button class="btn btn-sm btn-default"
+                            ng-click="securityModal(document)"
+                            tooltip-placement="bottom"
+                            uib-tooltip="Security"><i class="fa fa-fw fa-lock"></i></button>
+                        -->
+                        
+                        <button class="btn btn-sm btn-default" 
+                                ng-click="refreshPage()" 
+                                tooltip-placement="bottom" 
+                                uib-tooltip="{{::'Refresh'|translate}}">
+                            <i class="fa fa-fw fa-refresh"></i>
+                        </button>
+
+                        <a class="btn btn-sm btn-default" 
+                           href="{{getPreviewUrl(document)}}" 
+                           target="_blank" 
+                           tooltip-placement="bottom" 
+                           uib-tooltip="{{::'Open Link'|translate}}">
+                            <i class="fa fa-fw fa-mail-forward"></i>
+                        </a>
+                    </div>
+                    <button class="btn btn-sm btn-success" ng-disabled="!canUpdateDocument()" ng-click="updateDocument()"><i class="fa fa-fw fa-save"></i> {{::'Save Changes'|translate}}</button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div ng-if="attributes.length && !document.$hideAttributes" style="overflow-x:auto;white-space:nowrap;background-color:#F8F8F8;padding:16px 5px 10px 5px;">
+                <form name="attributesForm" ng-init="setFormScope(this)" novalidate>
+                    <table>
+                        <tr>
+                            <td ng-repeat="attr in attributes" style="vertical-align:top;">
+                                <div style="min-width:120px;margin-left:2px;padding:5px;position:relative;border:1px solid #ddd;" ng-style="{'background-color':isAttrDirty(attr)?'#FCE9C8':'#fff'}">
+
+                                    <div style="position:absolute;top:-16px;">
+                                        <div ng-if="attr.isList" class="btn-group btn-group-xs">
+                                            <button class="btn btn-default" ng-click="duplicateAttribute(attr, $index)">
+                                                <i class="fa fa-fw fa-copy"></i>
+                                            </button>
+                                            <button class="btn btn-default" ng-disabled="isFirstInList(attr,$index)" ng-click="moveAttribute($index,$index-1,attr)">
+                                                <i class="fa fa-fw fa-arrow-left"></i>
+                                            </button>
+                                            <button class="btn btn-default" ng-disabled="isLastInList(attr,$index)" ng-click="moveAttribute($index,$index+1,attr)">
+                                                <i class="fa fa-fw fa-arrow-right"></i>
+                                            </button>
+                                            <button class="btn btn-danger" ng-disabled="isFirstInList(attr,$index)&&isLastInList(attr,$index)" ng-click="attributes.splice($index,1)">
+                                                <i class="fa fa-fw fa-trash-o"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div ng-if="attr.children">
+                                            <label>{{attr.group}}</label>
+                                            <div ng-repeat="attr in attr.children">
+                                                <div ng-include="attr.editor.template"></div>
+                                            </div>
+                                        </div>
+                                        <div ng-if="!attr.children">
+                                            <label>{{attr.name||attr.propName}}</label>
+                                            <div ng-include="attr.editor.template"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                </form>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div>
+                    <iframe ne-editable-iframe ng-src="{{iframeUrl}}" style="width:100%;margin:0px;border:none;"></iframe>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

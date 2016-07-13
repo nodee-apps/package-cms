@@ -1,0 +1,23 @@
+<div ng-controller="EditableAttributeCtrl">
+    <div ng-repeat="(key, value) in editor">
+        <strong>{{value.name||key}}</strong><br/>
+        <textarea ng-if="!value.values.length"
+                  auto-height
+                  placeholder="{{value.placeholder}}"
+                  class="form-control"
+                  ng-model="attr[key]"
+                  ng-change="updateAttr(attr)"></textarea>
+        
+        <select ng-if="value.values.length && !value.values[0].value"
+                ng-options="v for v in value.values"
+                class="form-control"
+                ng-model="attr[key]"
+                ng-change="updateAttr(attr)"></select>
+        
+        <select ng-if="value.values.length && value.values[0].value"
+                ng-options="v.value as (v.name||v.value||v.value===0||v.value==='') for v in value.values"
+                class="form-control"
+                ng-model="attr[key]"
+                ng-change="updateAttr(attr)"></select>
+    </div>
+</div>

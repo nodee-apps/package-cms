@@ -1,0 +1,643 @@
+<script type="text/ng-template" id="views/cms-templates-item.html">
+    <div class="tree-item" style="padding-right:14px;">
+
+        <div ng-if="item.isDir" class="tree-item-expander">
+            <i class="fa tree-item-icon" 
+               ng-click="item.$expanded=!item.$expanded;tree.load(item);"
+               ng-class="{'fa-plus-square-o':!item.$expanded,'fa-minus-square-o':item.$expanded}"></i>
+        </div>
+        <a href="" 
+           class="tree-item-link btn btn-default" 
+           ng-click="item.isFile ? tree.focusItem(item) : item.$expanded=!item.$expanded && !!tree.load(item)" 
+           ng-class="{'active':item.$focused}">
+            <span class="nowrap">
+                <i class="fa fa-fw" ng-class="{'fa-folder':item.isDir,'fa-folder-open':item.$expanded,'fa-file-code-o':item.isFile}"></i> 
+                {{::item.id.split('/').pop()}}
+            </span>
+
+            <div ng-click="$event.stopPropagation();$event.preventDefault()" style="width:44px;" class="tree-item-menu btn-group btn-group-xs position-absolute" ng-class="{'visible':item.$focused}">
+                <button ng-if="item.isDir" ng-click="tree.createModal(item)" class="btn btn-default btn-light btn-xs">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button ng-click="tree.removeModal(item)" class="btn btn-danger btn-light btn-xs">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+            </div>
+        </a>
+
+        <div ng-if="item.$expanded" class="tree-item-pagination" ng-class="{'tree-item-pagination-border':item.$children.length}">
+            <div ng-if="item.$pagination && !item.$paginationDisabled" class="btn-group btn-group-xs">
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'prev')" ng-disabled="item.$prevDisabled">
+                    <i class="fa fa-backward"></i>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.addPage(item)" ng-disabled="item.$nextDisabled">
+                    {{item.$pagination.page}} <span ng-if="item.$pagination.pagesCount">{{::'of'|translate}} {{item.$pagination.pagesCount}}</span>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'next')" ng-disabled="item.$nextDisabled">
+                    <i class="fa fa-forward"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/ng-template" id="views/cms-templates-allowed-item.html">
+    <div class="tree-item" style="padding-right:14px;">
+
+        <div ng-if="item.isDir" class="tree-item-expander">
+            <i class="fa tree-item-icon" 
+               ng-click="$event.stopPropagation();item.$expanded=!item.$expanded;tree.load(item);"
+               ng-class="{'fa-plus-square-o':!item.$expanded,'fa-minus-square-o':item.$expanded}"></i>
+        </div>
+        <a href="" 
+           class="tree-item-link btn btn-default" 
+           ng-disabled="(tree.allowedChildTemplates||[]).indexOf(item.id) > -1" 
+           ng-click="tree.focusItem(item)">
+            <span class="nowrap">
+                <i class="fa fa-fw" ng-class="{'fa-folder':item.isDir,'fa-folder-open':item.$expanded,'fa-file-code-o':item.isFile}"></i> 
+                {{::item.id.split('/').pop()}}
+            </span>
+        </a>
+
+        <div ng-if="item.$expanded" class="tree-item-pagination" ng-class="{'tree-item-pagination-border':item.$children.length}">
+            <div ng-if="item.$pagination && !item.$paginationDisabled" class="btn-group btn-group-xs">
+                <button class="btn btn-light btn-xs" ng-click="$event.stopPropagation();tree.setPage(item, 'prev')" ng-disabled="item.$prevDisabled">
+                    <i class="fa fa-backward"></i>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="$event.stopPropagation();tree.addPage(item)" ng-disabled="item.$nextDisabled">
+                    {{item.$pagination.page}} <span ng-if="item.$pagination.pagesCount">{{::'of'|translate}} {{item.$pagination.pagesCount}}</span>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="$event.stopPropagation();tree.setPage(item, 'next')" ng-disabled="item.$nextDisabled">
+                    <i class="fa fa-forward"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<div class="row">
+    
+    <div class="col-xs-12 col-sm-5 col-md-4 col-lg-3" ng-hide="sidePanel.collapsed">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw fa-files-o"></i> {{::'Templates'|translate}}
+                <div class="pull-right">
+                    <button class="btn btn-sm btn-default" ng-click="tree.createModal()"><i class="fa fa-plus"></i> {{::'Add Root'|translate}}</button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div ne-tree="tree"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
+        
+        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
+            <button class="btn btn-sm btn-default btn-light" 
+                    style="padding:5px" 
+                    ng-click="sidePanel.collapsed=!sidePanel.collapsed">
+                <i class="fa fa-arrows-h"></i>
+            </button>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw {{template.icon||'fa-file-o'}}"></i> <strong>{{template.id||('Template Details'|translate)}}</strong> <span ng-if="template.baseProp">({{::'Base Prop.'|translate}}: "{{template.baseProp}}")</span>
+                <div class="pull-right">
+                    <button ng-if="template.id" ng-disabled="!template.baseProp || !template.$isValid" class="btn btn-sm btn-success" ng-click="updateTemplate()">
+                        <span class="fa fa-fw fa-save"></span> {{::'Update Template'|translate}}
+                    </button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div ng-if="!template.id">
+                    <div class="text-center padding-lg">
+                        <h1>{{::'Template management'|translate}}</h1>
+                        <span>{{::'Create root folder or file, or select existing in templates on left'|translate}}</span>
+                    </div>
+                </div>
+                <uib-tabset ng-if="template.id">
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Template Details'|translate}}">{{::'Details'|translate}}</div>
+                        </uib-tab-heading>
+                        <label>{{::'Base Property Name'|translate}} ({{::'required'|translate}})</label>
+                        <input type="text" class="form-control input-sm" ng-model="template.baseProp" placeholder="{{::'unique id'|translate}}">
+                        <small> {{::'TEMPLATE_BASE_PROP_DESCRIPTION'|translate}}
+                        </small>
+                        <br>
+                        <br>
+                        
+                        <label>{{::'Allowed Child Templates'|translate}}</label>
+                        <button ng-click="template.allowedChildTemplates=null;allowedTemplatesTree.allowedChildTemplates=null" class="btn btn-default btn-xs btn-light"> 
+                            <i class="fa fa-check"></i> {{::'Allow All'|translate}}
+                        </button>
+                        <button ng-click="template.allowedChildTemplates=[];allowedTemplatesTree.allowedChildTemplates=[]" class="btn btn-default btn-xs btn-light">
+                            <i class="fa fa-ban"></i> {{::'Allow None'|translate}}
+                        </button>
+                        <div class="dropdown visible-inline-block" uib-dropdown>
+                            <button class="btn btn-default btn-xs btn-light" ng-click="allowedTemplatesTree.items.length ? null : allowedTemplatesTree.load()" uib-dropdown-toggle>
+                                <i class="fa fa-plus"></i> {{::'Custom Selection'|translate}}
+                            </button>
+                            <div class="dropdown-menu" style="padding:5px">
+                                <div ne-tree="allowedTemplatesTree"></div>
+                            </div>
+                        </div>
+                        <br>
+                        <span ng-if="!template.allowedChildTemplates"><i class="fa fa-check"></i> {{::'Allowed All'|translate}} </span>
+                        <span ng-if="template.allowedChildTemplates.length===0"><i class="fa fa-ban"></i> {{::'Allowed None'|translate}} </span>
+                        <div class="input-group pull-left" style="width:250px" ng-repeat="childTemplate in template.allowedChildTemplates track by $index">
+                            <input type="text" class="input-sm form-control" ng-model="childTemplate" disabled="disabled">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-sm" ng-click="template.allowedChildTemplates.splice($index,1)">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <br>
+                        <br>
+
+                        <label>{{::'Name'|translate}}</label>
+                        <input type="text" class="form-control input-sm" ng-model="template.name" placeholder="{{::'meaningful name'|translate}}">
+                        <br>
+
+                        <label>{{::'Icon'|translate}}</label> (<i class="fa fa-fw {{template.icon||'fa-file-o'}}"></i>)
+                        <div class="dropdown" uib-dropdown>
+                            <input type="text" class="form-control input-sm" ng-model="template.icon" placeholder="fa-file-o" uib-dropdown-toggle>
+                            <ul class="dropdown-menu" style="overflow:auto;max-height:200px;">
+                                <li class="pull-left" style="width:20px" ng-repeat="icon in faIcons.$toArray()|filter:template.icon">
+                                    <a href="" 
+                                       style="padding:0px;margin:2px;"
+                                       class="text-muted nowrap" 
+                                       ng-click="template.icon=icon.icon">
+                                        <i class="fa fa-fw {{icon.icon}}"></i>
+                                        <!--<small>{{icon.name}}</small>-->
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <br>
+                        
+                        <label>{{::'Color'|translate}}</label>
+                        <div class="dropdown" uib-dropdown>
+                            <input type="text" class="form-control input-sm" ng-model="template.color" placeholder="#ffffff" ng-style="{'background-color':template.color}" ne-color-contrast="template.color" uib-dropdown-toggle>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <div class="margin-sm" style="width:160px">
+                                        <a href="" 
+                                           class="pull-left visible-block" 
+                                           ng-repeat="color in palette256 track by $index" 
+                                           ng-click="template.color=color" 
+                                           style="width:10px;height:10px"
+                                           ng-style="{'background-color':color}">
+                                        </a>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </li>
+                            </ul>
+                        </div>
+                        <br>
+
+                        <label>{{::'Description'|translate}}</label>
+                        <textarea class="form-control input-sm" ng-model="template.description" placeholder="{{::'some description for content editor'|translate}}"></textarea>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Template Html'|translate}}">{{::'Html'|translate}}</div>
+                        </uib-tab-heading>
+                        <div ui-ace="{mode:'html'}" ng-model="template.html" style="height:{{height}}px;"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Page/Widget Attributes'|translate}}">
+                                {{::'Attributes'|translate}}
+                                <button style="font-size:8px;" class="btn btn-default btn-xs" uib-btn-checkbox ng-model="template.$attributes_json">
+                                    JSON
+                                </button>
+                            </div>
+                        </uib-tab-heading>
+                        <div ne-template-attributes-editor="template.attributes" template-is-valid="template.$isValid" edit-as-json="template.$attributes_json" template-html="template.html" template-base-prop="template.baseProp"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Content Editors Bindings'|translate}}">
+                                {{::'Editors'|translate}}
+                                <button style="font-size:8px;" class="btn btn-default btn-xs" uib-btn-checkbox ng-model="template.$editors_json">
+                                    JSON
+                                </button>
+                            </div>
+                        </uib-tab-heading>
+                        <div ne-template-editors-editor="template.editors" template-is-valid="template.$isValid" edit-as-json="template.$editors_json" template-html="template.html"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Data-->HTML Mapping'|translate}}">
+                                {{::'View Mapping'|translate}}
+                                <button style="font-size:8px;" class="btn btn-default btn-xs" uib-btn-checkbox ng-model="template.$vew_mapping_json">
+                                    JSON
+                                </button>
+                            </div>
+                        </uib-tab-heading>
+                        <div ne-template-mapping-editor="template.view_mapping" template-is-valid="template.$isValid" edit-as-json="template.$vew_mapping_json" template-html="template.html" template-base-prop="template.baseProp"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Customize Rendering'|translate}}">{{::'Controller'|translate}}</div>
+                        </uib-tab-heading>
+                        <div ui-ace="{mode:'javascript'}" ng-model="template.controller" style="height:{{height}}px;"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'HTML-->Data Mapping'|translate}}">
+                                {{::'Parse Mapping'|translate}}
+                                <button style="font-size:8px;" class="btn btn-default btn-xs" uib-btn-checkbox ng-model="template.$parse_mapping_json">
+                                    JSON
+                                </button>
+                            </div>
+                        </uib-tab-heading>
+                        <div ne-template-mapping-editor="template.parse_mapping" template-is-valid="template.$isValid" edit-as-json="template.$parse_mapping_json" template-html="template.html" template-base-prop="template.baseProp"></div>
+                    </uib-tab>
+                    <uib-tab>
+                        <uib-tab-heading>
+                            <div uib-tooltip="{{::'Customize Parsing'|translate}}">{{::'Parser'|translate}}</div>
+                        </uib-tab-heading>
+                        <div ui-ace="{mode:'javascript'}" ng-model="template.parser" style="height:{{height}}px;"></div>
+                    </uib-tab>
+                </uib-tabset>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/ng-template" id="views/cms-templates-editors.html">
+    <div ng-if="editAsJson" ui-ace="{mode:'javascript'}" ng-model="editorsString" ng-change="checkEditorsValidity(editorsString)" style="height:{{height}}px;"></div>
+    <table ng-if="!editAsJson && editors.length" class="table grid table-condensed">
+        <thead>
+            <tr>
+                <td style="width:110px">&nbsp;</td>
+                <td style="width:180px"><small>{{::'CSS Selector'|translate}}</small></td>
+                <td><small>{{::'Editors'|translate}}</small></td>
+                <td style="width:130px">&nbsp;</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat-start="e in editors">
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-default btn-light" ng-disabled="$first" ng-click="editors.splice($index,1);editors.splice($index-1,0,e)">
+                            <i class="fa fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-default btn-light" ng-disabled="$last" ng-click="editors.splice($index,1);editors.splice($index+1,0,e)">
+                            <i class="fa fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-default btn-light" ng-click="duplicateEditor(e, $index)">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" class="input-sm" ng-model="e.selector" ng-model-options="{ debounce:250 }" ng-change="checkSelector(e); checkEditorsValidity()" placeholder=".css-selector" ng-class="{'background-warning':!e.$selectionLength,'background-danger':e.$dupliciteSelector||!e.selector}" /> 
+                    {{e.$selectionLength||0}}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" ng-repeat="(key,value) in e.editors" style="margin-left:2px;">
+                        <button class="btn btn-default btn-sm" uib-tooltip="{{cmsContentEditors[key].description}}" ng-click="e.$settings===key?e.$settings=null:e.$settings=key" ng-class="{'active':e.$settings===key,'background-danger':e[key].$invalidSettings}">
+                            {{cmsContentEditors[key].name||key}}
+                        </button>
+                        <button class="btn btn-default btn-sm" ng-click="deleteKey(e.editors, key);e.$settings===key?e.$settings=null:e.$settings=e.$settings">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="dropdown" style="display:inline-block;" uib-dropdown>
+                        <button class="btn btn-default btn-light btn-sm btn-light" uib-dropdown-toggle>
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li ng-repeat="(id,cmsEditor) in cmsContentEditors">
+                                <a href="" ng-if="!e.editors[id]" ng-click="e.editors[id]=json.pretty(cmsEditor.settings);e.$settings=id">{{cmsEditor.name||id}}</a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn btn-default btn-sm" ng-model="e.group" uib-tooltip="{{::'Group Descendants'|translate}}" uib-btn-checkbox>
+                        <i class="fa fa-fw" ng-class="{'fa-chain':e.group,'fa-chain-broken':!e.group}"></i> 
+                    </button>
+                    <button class="btn btn-default btn-sm" ng-model="e.disabled" uib-tooltip="{{::'Disable'|translate}}" uib-btn-checkbox>
+                        <i class="fa fa-fw" ng-class="{'fa-eye':!e.disabled,'fa-eye-slash':e.disabled}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" ng-click="editors.splice($index,1);">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr ng-repeat-end ng-if="e.$settings">
+                <td colspan="4" class="grid-row-details">
+                    <div class="row">
+                        <textarea class="form-control" rows="6" ng-model="e.editors[e.$settings]" ng-change="checkEditorSettings(e, e.$settings);checkEditorsValidity()" ng-class="{'background-danger':e[e.$settings].$invalidSettings}"></textarea>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-left">
+        <button ng-if="!editAsJson" class="btn btn-default btn-sm" ng-click="editors.push({})">
+            <i class="fa fa-plus"></i> {{::'Add Editor'|translate}}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="views/cms-templates-attributes.html">
+    <div>
+        <div ng-if="editAsJson" ui-ace="{mode:'javascript'}" ng-model="attributesString" ng-change="checkAttributesValidity(attributesString)" style="height:{{height}}px;"></div>
+        <table ng-if="!editAsJson && attributes.length" class="table grid table-condensed">
+            <thead>
+                <tr>
+                    <td style="width:110px">&nbsp;</td>
+                    <td><small>{{::'Property Name'|translate}}</small></td>
+                    <td><small>{{::'Label Name'|translate}}</small></td>
+                    <td style="width:160px"><small>{{::'Editor'|translate}}</small></td>
+                    <td style="width:200px"><small>{{::'Group'|translate}}</small></td>
+                    <td style="width:85px">&nbsp;</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat-start="a in attributes" ng-class="{'hide-line':isInGroup(a,$index) && countGroup(a.group)>1}" ng-style="{'background-color':a.grouped?'#F8F8F8':''}">
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-default btn-light" ng-disabled="$first||(isFirstInGroup(a,$index)&&countGroup(a.group)>1)" ng-click="moveSkipGroup(a,$index,$index-1)">
+                                <i class="fa fa-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-default btn-light" ng-disabled="$last||(isLastInGroup(a,$index)&&countGroup(a.group)>1)" ng-click="moveSkipGroup(a,$index,$index+1)">
+                                <i class="fa fa-arrow-down"></i>
+                            </button>
+                            <button class="btn btn-default btn-light" ng-click="duplicateAttribute(a, $index)">
+                                <i class="fa fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="dropdown form-group" uib-dropdown style="margin:0">
+                            <input type="text" ng-model="a.propName" ng-change="assignListProp(a,$index);checkProp(a)" ng-class="{'background-danger':a.$invalidProp}" placeholder="{{::'attributes property'|translate}}" class="form-control input-sm" uib-dropdown-toggle>
+                            <ul class="dropdown-menu" ng-if="propertySuggestions">
+                                <li ng-repeat="s in propertySuggestions track by $index">
+                                    <a href="" ng-click="a.propName = a.propName + ((a.propName?'.':'') + s)">
+                                        {{s}}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control input-sm" ng-model="a.name" placeholder="{{::'label name'|translate}}">
+                    </td>
+                    <td>
+                        <div class="input-group" uib-tooltip="{{::cmsAttributeEditors[a.editor].description|translate}}">
+                            <select type="text" class="form-control input-sm" ng-change="a.settings=json.stringify(cmsAttributeEditors[a.editor].settings)" ng-model="a.editor" ng-options="key as value.name for (key,value) in cmsAttributeEditors"></select>
+                            <span class="input-group-btn">
+                                <button ng-disabled="!a.editor" class="btn btn-default btn-sm" ng-model="a.$settings" uib-btn-checkbox>
+                                    <i class="fa fa-wrench"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="input-group">
+                            <input type="text" class="form-control input-sm" ng-disabled="a.grouped" ng-model="a.group" placeholder="{{::'group id'|translate}}">
+                            <span class="input-group-btn">
+                                <button ng-click="" ng-disabled="!a.group" class="btn btn-default btn-sm" ng-change="applyGrouping(a,$index);assignListProp(a,$index);checkProp(a)" ng-model="a.grouped" uib-btn-checkbox>
+                                    <i class="fa" ng-class="{'fa-chain':a.grouped,'fa-chain-broken':!a.grouped}"></i>
+                                </button>
+                                <button uib-tooltip="{{::'Array Of Values'|translate}}" ng-click="" class="btn btn-default btn-sm" ng-change="groupList(a.group,a.isList);assignListProp(a,$index);checkProp(a)" ng-model="a.isList" uib-btn-checkbox>
+                                    <i class="fa fa-list"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-default btn-sm" ng-model="a.disabled" uib-tooltip="{{::'Disable'|translate}}" uib-btn-checkbox>
+                            <i class="fa" ng-class="{'fa-eye':!a.disabled,'fa-eye-slash':a.disabled}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" ng-click="attributes.splice($index,1);checkAttributesValidity();">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr ng-repeat-end ng-if="a.$settings">
+                    <td colspan="6" class="grid-row-details">
+                        <div class="row">
+                            <textarea class="form-control" rows="5" ng-model="a.settings" ng-change="checkSettings(a)" ng-class="{'background-danger':a.$invalidSettings}"></textarea>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button ng-if="!editAsJson" class="btn btn-default btn-sm" ng-click="attributes.push({})">
+            <i class="fa fa-plus"></i> {{::'Add Attribute'|translate}}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="views/cms-templates-mapping-nested.html">
+    <div ne-template-mapping-editor="m.inside"
+         parent-mapping="m"
+         parent-selector="parentSelector + ' ' + m.selector"
+         template-is-valid="templateIsValid"
+         edit-as-json="false"
+         template-html="templateHtml"
+         template-base-prop="templateBaseProp"></div>
+</script>
+
+<script type="text/ng-template" id="views/cms-templates-mapping.html">
+    <div ng-if="editAsJson" ui-ace="{mode:'javascript'}" ng-model="mappingString" ng-change="checkMappingValidity(mappingString)" style="height:{{height}}px;"></div>
+    <table ng-if="!editAsJson && mapping.length" class="table grid table-condensed">
+        <thead ng-if="!parentMapping">
+            <tr>
+                <td>&nbsp;</td>
+                <td><small>{{::'CSS Selector'|translate}}</small></td>
+                <td><small>{{::'Inner HTML'|translate}}</small></td>
+                <td><small>{{::'Element Attributes'|translate}}</small></td>
+                <td><small>{{::'Repeat HTML'|translate}}</small></td>
+                <td>&nbsp;</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat-start="m in mapping">
+                <td style="width:110px">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-default btn-light" ng-disabled="$first" ng-click="mapping.splice($index,1);mapping.splice($index-1,0,m)">
+                            <i class="fa fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-default btn-light" ng-disabled="$last" ng-click="mapping.splice($index,1);mapping.splice($index+1,0,m)">
+                            <i class="fa fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-default btn-light" ng-click="duplicate(m, $index, mapping)">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                </td>
+                <td style="width:180px">
+                    <input type="text" class="input-sm" ng-model="m.selector" ng-model-options="{ debounce:250 }" ng-change="checkSelector(m, mapping); checkMappingValidity()" placeholder=".css-selector" ng-class="{'background-warning':!m.$selectionLength,'background-danger':m.$dupliciteSelector||!m.selector}" /> 
+                    {{m.$selectionLength||0}}
+                </td>
+                <td>
+                    <div class="dropdown form-group" style="margin:0" uib-dropdown>
+                        <input type="text" placeholder="{{::'model property'|translate}}" class="form-control input-sm" uib-dropdown-toggle ng-model="m.htmlKey">
+                        <ul class="dropdown-menu" ng-if="propertySuggestions">
+                            <li ng-repeat="s in propertySuggestions track by $index">
+                                <a href="" ng-click="m.htmlKey = m.htmlKey + ((m.htmlKey?'.':'') + s)">
+                                    {{s}}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+                <td>
+                    <button uib-tooltip="{{::'Show Attributes'|translate}}" class="btn btn-sm btn-default" ng-change="m.$details={attrs:m.$details.attrs}" ng-model="m.$details.attrs" uib-btn-checkbox>
+                        <i class="fa fa-ellipsis-h"></i> {{::'Attributes'|translate}} ({{keysLength(m.attrs)}})
+                    </button>
+                </td>
+                <td style="width:180px">
+                    <div class="dropdown form-group" style="margin:0" uib-dropdown>
+                        <div class="input-group inut-group-sm">
+                            <span class="input-group-btn">
+                                <button uib-tooltip="{{::'Inside Repeat Element'|translate}}" class="btn btn-sm" ng-class="{'btn-default':!keysLength(m.inside),'btn-success':keysLength(m.inside)}" ng-disabled="!m.repeatKey" ng-change="m.$details={repeat:m.$details.repeat}" ng-model="m.$details.repeat" uib-btn-checkbox>
+                                    <i class="fa fa-code"></i>
+                                </button>
+                            </span>
+                            <input type="text" placeholder="{{::'model property'|translate}}" class="input-sm" uib-dropdown-toggle ng-model="m.repeatKey">
+                        </div>
+                        <ul class="dropdown-menu" ng-if="propertySuggestions">
+                            <li ng-repeat="s in propertySuggestions track by $index">
+                                <a href="" ng-click="m.repeatKey = m.repeatKey + ((m.repeatKey?'.':'') + s)">
+                                    {{s}}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="width:45px">
+                    <button class="btn btn-danger btn-sm" ng-click="mapping.splice($index,1);checkMappingValidity()">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr ng-if="m.$details.repeat && m.repeatKey">
+                <td colspan="6" class="grid-row-details">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div ng-include="'views/cms-templates-mapping-nested.html'"></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr ng-repeat-end ng-if="m.$details.attrs">
+                <td colspan="6" class="grid-row-details">
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <table class="table table-condensed" style="background-color: transparent;">
+                                <tr ng-repeat="attr in m.attrs">
+                                    <td style="width:80px">
+                                        <div class="btn-group btn-group-xs">
+                                            <button class="btn btn-default" ng-disabled="$first" ng-click="m.attrs.splice($index,1);m.attrs.splice($index-1,0,attr)">
+                                                <i class="fa fa-arrow-up"></i>
+                                            </button>
+                                            <button class="btn btn-default" ng-disabled="$last" ng-click="m.attrs.splice($index,1);m.attrs.splice($index+1,0,attr)">
+                                                <i class="fa fa-arrow-down"></i>
+                                            </button>
+                                            <button class="btn btn-default" ng-click="m.attrs.splice($index,1)">
+                                                <i class="fa fa-trash-o"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-right">
+                                        <input ng-if="attr.type==='simple'" type="text" class="input-xs" ng-model="attr.name" placeholder="{{::'attribute (e.g. href)'|translate}}">
+                                        <span ng-if="attr.type!=='simple'">{{attr.type}}</span>
+                                    </td>
+                                    <td style="width:25px">="</td>
+                                    <td>
+                                        <span ng-if="attr.type==='simple'">
+                                            <div class="dropdown form-group pull-left" uib-dropdown style="width:142px;margin:0px 5px">
+                                                <input type="text" ng-model="attr.value" placeholder="{{::'model property'|translate}}" class="form-control input-xs" uib-dropdown-toggle>
+                                                <ul class="dropdown-menu" ng-if="propertySuggestions">
+                                                    <li ng-repeat="s in propertySuggestions track by $index">
+                                                        <a href="" ng-click="attr.value = attr.value + ((attr.value?'.':'') + s)">
+                                                            {{s}}
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <span class="pull-left">&nbsp;"</span>
+                                        </span>
+                                        
+                                        <span ng-if="attr.type!=='simple'">
+                                            <div ng-repeat="v in attr.value" class="pull-left" style="width:290px;margin:0px 5px">
+                                                <input ng-if="attr.type==='style'" type="text" class="input-xs pull-left" ng-model="v.name" placeholder="{{::'style prop (e.g. width)'|translate}}">
+                                                <div ng-if="attr.type==='class'" class="dropdown form-group pull-left" uib-dropdown style="width:142px;margin:0">
+                                                    <input type="text" ng-model="v.name" placeholder="{{::'css class name'|translate}}" class="form-control input-xs" uib-dropdown-toggle>
+                                                    <ul class="dropdown-menu">
+                                                    <li ng-repeat="s in classNameSuggestions track by $index">
+                                                        <a href="" ng-click="v.name = s">
+                                                            {{s}}
+                                                        </a>
+                                                    </li>
+                                                    </ul>
+                                                </div>
+                                                <span class="pull-left">:</span>
+                                                <div class="dropdown form-group pull-right" style="width:142px;margin:0" uib-dropdown>
+                                                    <div class="input-group">
+                                                        <input type="text" ng-model="v.value" placeholder="{{::'model property'|translate}}" class="form-control input-xs" uib-dropdown-toggle>
+                                                        <span class="input-group-btn">
+                                                            <button class="btn btn-default btn-xs" ng-disabled="attr.value.length===1" ng-click="attr.value.splice($index,1)">
+                                                            <i class="fa fa-minus"></i>
+                                                            </button>
+                                                        </span>
+                                                    </div>
+                                                    <ul class="dropdown-menu" ng-if="propertySuggestions">
+                                                        <li ng-repeat="s in propertySuggestions track by $index">
+                                                            <a href="" ng-click="v.value = v.value + ((v.value?'.':'') + s)">
+                                                                {{s}}
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            &nbsp;
+                                            <button class="btn btn-default btn-xs pull-left" ng-click="attr.value.push({ name:'',value:'' })">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                            <span class="pull-left">&nbsp;"</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-xs-12">
+                            <div class="dropdown" uib-dropdown>
+                                <button class="btn btn-default btn-xs" uib-dropdown-toggle>
+                                    <i class="fa fa-plus"></i> {{::'Add Attribute Mapping'|translate}}
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li ng-repeat="at in availableAttrTypes(m)">
+                                        <a href="" ng-click="at==='simple' ? m.attrs.push({ type:at }) : m.attrs.push({ type:at, name:at, value:[{ name:'',value:'' }] })">{{at}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button ng-if="!editAsJson" class="btn btn-default btn-sm" ng-click="mapping.push({}); checkMappingValidity()">
+        <i class="fa fa-plus"></i> {{::'Add Mapping'|translate}}
+    </button>
+</script>

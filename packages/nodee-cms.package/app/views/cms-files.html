@@ -1,0 +1,137 @@
+<script type="text/ng-template" id="views/cms-files-item.html">
+    <div class="tree-item" style="padding-right:14px;">
+
+        <div ng-if="item.isDir" class="tree-item-expander">
+            <i class="fa tree-item-icon" 
+               ng-click="item.$expanded=!item.$expanded;tree.load(item);"
+               ng-class="{'fa-plus-square-o':!item.$expanded,'fa-minus-square-o':item.$expanded}"></i>
+        </div>
+        <a href="" class="tree-item-link btn btn-default" ng-click="tree.focusItem(item)" ng-class="{'active':item.$focused}">
+            <span class="nowrap">
+                <i class="fa fa-fw" ng-class="{'fa-folder':item.isDir,'fa-folder-open':item.$expanded,'fa-file-code-o':item.isFile}"></i> 
+                {{::item.id.split('/').pop()}}
+            </span>
+            
+            <div ng-click="$event.stopPropagation();$event.preventDefault()" style="width:44px;" class="tree-item-menu btn-group btn-group-xs position-absolute" ng-class="{'visible':item.$focused}">
+                <button ng-if="item.isDir" ng-click="tree.createModal(item)" class="btn btn-default btn-light btn-xs">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button ng-click="tree.removeModal(item)" class="btn btn-danger btn-light btn-xs">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+            </div>
+        </a>
+        
+        <div ng-if="item.$expanded" class="tree-item-pagination" ng-class="{'tree-item-pagination-border':item.$children.length}">
+            <div ng-if="item.$pagination && !item.$paginationDisabled" class="btn-group btn-group-xs">
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'prev')" ng-disabled="item.$prevDisabled">
+                    <i class="fa fa-backward"></i>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.addPage(item)" ng-disabled="item.$nextDisabled">
+                    {{item.$pagination.page}} <span ng-if="item.$pagination.pagesCount">{{::'of'|translate}} {{item.$pagination.pagesCount}}</span>
+                </button>
+                <button class="btn btn-light btn-xs" ng-click="tree.setPage(item, 'next')" ng-disabled="item.$nextDisabled">
+                    <i class="fa fa-forward"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</script>
+
+<div class="row">
+    <div class="col-xs-12 col-sm-5 col-md-4 col-lg-3" ng-hide="sidePanel.collapsed">
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw fa-folder-open"></i> {{::'Public Files'|translate}}
+                <div class="pull-right">
+                    <button class="btn btn-sm btn-default" ng-click="tree.createModal()"><span class="fa fa-plus"></span> {{::'Add Root'|translate}}</button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+                <div class="tree" ne-tree="tree"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
+        
+        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
+            <button class="btn btn-sm btn-default btn-light" 
+                    style="padding:5px" 
+                    ng-click="sidePanel.collapsed=!sidePanel.collapsed">
+                <i class="fa fa-arrows-h"></i>
+            </button>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <i class="fa fa-fw fa-folder-o"></i> {{(folder.id||'Folder')|translate}}
+                        <span ng-if="folder.id" class="pull-right">
+                            <span class="file-upload btn btn-sm btn-default">
+                                <i class="fa fa-folder-open text-muted"></i>
+                                <span class="hidden-xs">{{::'Browse To Upload'|translate}}</span>
+                                <ne-file multiple="true" ng-model="upload.files" ng-change="upload.start(files)"></ne-file>
+                            </span>
+                            <button class="btn btn-danger btn-sm" 
+                                    ng-disabled="!grid.getSelectedItems().length" 
+                                    ng-click="removeSelected()">
+                                <i class="fa fa-fw fa-trash-o"></i> 
+                                <span class="hidden-xs">{{::'Remove Selected'|translate}}</span>
+                            </button>
+                        </span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body" ng-if="!folder.id">
+                <div class="text-center padding-lg">
+                    <h1>{{::'Public files management'|translate}}</h1>
+                    <span>{{::'Create "root folder" or select existing in folders on left'|translate}}</span>
+                </div>
+            </div>
+            <div class="panel-body" ng-if="folder.id" ne-file-drop-area ne-files-drop="upload.start(files)">
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <i class="fa fa-5x fa-upload"></i>
+                        <div class="grid-files-item" ng-repeat="item in grid.items">
+                            <div class="grid-files-item-menu">
+                                <div class="btn-group btn-group-xs">
+                                    <button ng-if="decideShow(item)==='editable_file'" ng-click="editorModal(item)" class="btn btn-default">
+                                        <i class="fa fa-fw fa-pencil"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid-files-item-body" ng-class="{selected:item.$selected}" uib-tooltip="{{item.name}}.{{item.ext}}" ng-click="grid.selectItem(item)">
+                                <table>
+                                    <tr>
+                                        <td ng-switch="decideShow(item)">
+                                            <img ng-switch-when="small_image" ng-src="/{{item.id}}">
+                                            <div ng-switch-when="editable_file">
+                                                <span>{{::item.ext.toUpperCase()}}</span>
+                                            </div>
+                                            <div ng-switch-default>
+                                                <i class="fa fa-fw" ng-class="getFileIcon(item)"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <a href="/{{item.id}}" target="_blank" class="grid-files-item-link">
+                                <small class="nowrap"><i class="fa fa-fw fa-mail-forward"></i> {{::item.name}}</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="panel-footer" ng-if="folder.id">
+                <div ne-grid-pagination="grid"></div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,148 @@
+<div ng-controller="EditableTextCtrl">
+    
+    <ul class="nav nav-tabs">
+        <li ng-if="show.wysiwyg" ng-class="{'active':show.mode==='wysiwyg'}"><a href="" ng-click="show.mode='wysiwyg'">{{::'Wysiwyg'|translate}}</a></li>
+        <li ng-if="show.markdown" ng-class="{'active':show.mode==='markdown'}"><a href="" ng-click="show.mode='markdown'">{{::'Markdown'|translate}}</a></li>
+        <li ng-if="show.html" ng-class="{'active':show.mode==='html'}"><a href="" ng-click="show.mode='html'">{{::'Html'|translate}}</a></li>
+    </ul>
+    <div class="tab-content" style="padding:3px;border:1px solid #DDDDDD;border-top:none;">
+        <div ng-if="show.mode==='wysiwyg'">
+            <div style="margin-top:10px;margin-bottom:10px;">
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.undo(selection.ws))"><i class="fa fa-undo"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.redo(selection.ws))"><i class="fa fa-repeat"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.bold(selection.ws))"><i class="fa fa-bold"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.italic(selection.ws))"><i class="fa fa-italic"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.strikethrough(selection.ws))"><i class="fa fa-strikethrough"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.h1(selection.ws))">H1</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.h2(selection.ws))">H2</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.h3(selection.ws))">H3</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.h4(selection.ws))">H4</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.h5(selection.ws))">H5</button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="wsInsertLink(selection.ws)"><i class="fa fa-link"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.unlink(selection.ws))"><i class="fa fa-unlink"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="wsInsertImage(selection.ws)"><i class="fa fa-picture-o"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.ol(selection.ws))"><i class="fa fa-list-ol"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.ul(selection.ws))"><i class="fa fa-list-ul"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.outdent(selection.ws))"><i class="fa fa-dedent"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.indent(selection.ws))"><i class="fa fa-indent"></i></button>
+                </span>
+                <span class="btn-group">
+                    <div class="dropdown pull-left" uib-dropdown>
+                        <button class="btn btn-default btn-xs" uib-dropdown-toggle ng-disabled="!selection.ws">
+                            <i class="fa fa-text-height"></i><i class="fa fa-caret-down"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li ng-repeat="size in wsEditor.fontSizes">
+                                <a href="" style="font-size:{{size.value}}"
+                                   ng-click="updateHTML(wsEditor.fontSize(selection.ws, size.value))"><font size="{{size.value}}">{{size.name}}</font></a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="dropdown" style="float:left;" uib-dropdown>
+                        <button class="btn btn-default btn-xs" uib-dropdown-toggle ng-disabled="!selection.ws">
+                            <i class="fa fa-magic"></i><i class="fa fa-caret-down"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li ng-repeat="color in wsEditor.colors" style="float:left;float:left;margin:2px;">
+                                <a href="" style="border:1px solid black;display:block;width:15px;height:15px;padding:0px;background-color:{{color}}"
+                                   ng-click="updateHTML(wsEditor.bgColor(selection.ws, color))">&nbsp;</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="dropdown" style="float:left;" uib-dropdown>
+                        <button class="btn btn-default btn-xs" uib-dropdown-toggle ng-disabled="!selection.ws">
+                            <i class="fa fa-font"></i><i class="fa fa-caret-down"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li ng-repeat="color in wsEditor.colors" style="float:left;float:left;margin:2px;">
+                                <a href="" style="border:1px solid black;display:block;width:15px;height:15px;padding:0px;background-color:{{color}}"
+                                   ng-click="updateHTML(wsEditor.color(selection.ws, color))">&nbsp;</a>
+                            </li>
+                        </ul>
+                    </div>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.justifyLeft(selection.ws))"><i class="fa fa-align-left"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.justifyCenter(selection.ws))"><i class="fa fa-align-center"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.justifyRight(selection.ws))"><i class="fa fa-align-right"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.justifyFull(selection.ws))"><i class="fa fa-align-justify"></i></button>
+                </span>
+                <span class="btn-group">
+                    <!--
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.blocquote(selection.ws))"><i class="fa fa-quote-right"></i></button>
+                    -->
+                    
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.hr(selection.ws))"><i class="fa fa-ellipsis-h"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="wsInsertTable(selection.ws)"><i class="fa fa-table"></i></button>
+                </span>
+            </div>
+            
+            <div ng-model="content.html"
+                 contenteditable="true"
+                 ng-trim="false"
+                 ne-selection-model="selection.ws"
+                 ng-change="updateHTML(content.html)"
+                 style="min-height:50px;overflow-x:auto"></div>
+            
+            <!--
+            <div text-angular
+                 ta-toolbar-button-class="btn btn-default btn-xs"
+                 ng-model="content.html"
+                 ng-change="updateHTML(content.html)">
+            </div>
+            -->
+        </div>
+        
+        <div ng-if="show.mode==='markdown'">
+            <div style="margin-top:10px;margin-bottom:10px;">
+                <!--
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.undo(selection.md))"><i class="fa fa-undo"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.redo(selection.md))"><i class="fa fa-repeat"></i></button>
+                </span>
+                -->
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.bold(selection.md))"><i class="fa fa-bold"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.italic(selection.md))"><i class="fa fa-italic"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.strikethrough(selection.md))"><i class="fa fa-strikethrough"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.h1(selection.md))">H1</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.h2(selection.md))">H2</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.h3(selection.md))">H3</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.h4(selection.md))">H4</button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.h5(selection.md))">H5</button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="mdInsertLink(selection.md)"><i class="fa fa-link"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="mdInsertImage(selection.md)"><i class="fa fa-picture-o"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.ol(selection.md))"><i class="fa fa-list-ol"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.ul(selection.md))"><i class="fa fa-list-ul"></i></button>
+                </span>
+                <span class="btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.blocquote(selection.md))"><i class="fa fa-quote-right"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="updateMD(mdEditor.hr(selection.md))"><i class="fa fa-ellipsis-h"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="!selection.md" ng-click="mdInsertTable(selection.md)"><i class="fa fa-table"></i></button>
+                </span>
+            </div>
+            <textarea ne-auto-height class="form-control" ng-model="content.mdText" wrap="on" ng-trim="false" ne-selection-model="selection.md" ng-change="updateMD(content.mdText)"></textarea>
+        </div>
+        
+        <div ng-if="show.mode==='html'">
+            <textarea style="height:300px;" class="form-control" ng-model="content.html" wrap="on" ng-trim="false" ng-change="updateHTML(content.html)"></textarea>
+        </div>
+    </div>
+</div>

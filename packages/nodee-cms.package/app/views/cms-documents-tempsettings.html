@@ -1,0 +1,44 @@
+<div>
+    <div>
+        <div ng-repeat="template in modal.mappings">
+            <strong>
+                <i class="fa fa-fw {{map.icon||'fa-file-o'}}"></i>
+                {{template.id}}
+            </strong>
+            <ul style="list-style:none;padding-left:20px;">
+                <li>
+                    {{::'Attributes'|translate}}: <span ng-if="!template.mapping.attributes.length">({{::'none'|translate}})</span>
+                    <ul ng-if="template.mapping.attributes.length" style="list-style:none;padding-left:20px;">
+                        <li ng-repeat="attr in template.mapping.attributes">
+                            <button class="btn btn-default btn-xs" ng-click="modal.toggleAttribute(template.id, attr.propName, attr)" ng-class="{'active':attr.disabled}">
+                                <i class="fa fa-fw" ng-class="{'fa-eye':!attr.disabled,'fa-eye-slash':attr.disabled}"></i>
+                            </button>
+                            <span ng-style="{'text-decoration':attr.disabled?'line-through':'none'}"> {{attr.name}} ({{attr.propName}}-{{attr.editor}})</span>
+                            <span ng-if="modal.attributeExtended(template.id,attr.propName)" class="badge">{{::'Default State Changed'|translate}}</span>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    {{::'Editors'|translate}}: <span ng-if="!modal.keys(template.mapping.editors)">({{::'none'|translate}})</span>
+                    <ul ng-if="modal.keys(template.mapping.editors)" style="list-style:none;padding-left:20px;">
+                        <li ng-repeat="(selector,editors) in template.mapping.editors">
+                            <div class="btn-group btn-group-xs">
+                                <button class="btn btn-default btn-xs" ng-click="modal.toggleEditor(template.id, selector, editors)" ng-class="{'active':editors.disabled}">
+                                    <i class="fa fa-fw" ng-class="{'fa-eye':!editors.disabled,'fa-eye-slash':editors.disabled}"></i>
+                                </button>
+                            </div>
+                            <span ng-style="{'text-decoration':editors.disabled?'line-through':'none'}"> {{selector}} ({{modal.keys(editors)}})</span>
+                            <span ng-if="modal.editorExtended(template.id,selector)" class="badge">{{::'Default State Changed'|translate}}</span>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-click="modal.update(modal.item)">{{::'Update And Refresh Page'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

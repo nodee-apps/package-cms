@@ -1,0 +1,56 @@
+<div ng-controller="EditableImageCtrl">
+    
+    <strong>{{::'Image Source'|translate}}</strong><br/>
+    <textarea auto-height class="form-control" ng-model="src" ng-change="setSrc(src)"></textarea>
+    
+    <div class="text-center margin-top-sm">
+        <a href="" ng-click="changeImageModal()">
+            <img ng-src="{{src}}"
+                 on-load="setNaturalWidth(naturalWidth);setNaturalHeight(naturalHeight);"
+                 class="thumbnail"
+                 style="max-width:100%;display:inline;"
+                 ng-style1="{'width':width+'px','height':height+'px'}" />
+        </a>
+    </div>
+    
+    <div class="form-inline text-center margin-top-xs">
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-control input-sm"
+                       style="width:50px"
+                       type="text"
+                       ng-model="width"
+                       ng-change="setWidth(width)"/>
+                <span class="input-group-btn">
+                    <button class="btn btn-sm btn-default"
+                            uib-tooltip="{{::'Set Natural Image Width'|translate}} ({{naturalWidth}})"
+                            ng-click="setWidth(naturalWidth)">
+                        <i class="fa fa-fw fa-arrows-h"></i></button>
+                </span>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-control input-sm"
+                       style="width:50px"
+                       type="text"
+                       ng-model="height"
+                       ng-change="setHeight(height)"/>
+                <span class="input-group-btn">
+                    <button class="btn btn-sm btn-default"
+                            uib-tooltip="{{::'Set Natural Image Height'|translate}} ({{naturalHeight}})"
+                            ng-click="setHeight(naturalHeight)">
+                        <i class="fa fa-fw fa-arrows-v"></i></button>
+                </span>
+            </div>
+        </div>
+        <!--
+        <button class="btn btn-sm btn-default"
+                uib-tooltip="{{::'Natural Image Size'|translate}}"
+                ng-show="origImgUrl"
+                ng-click="loadOriginal()">
+            <i class="fa fa-fw fa-arrows"></i></button>
+        -->
+    </div>
+    
+</div>

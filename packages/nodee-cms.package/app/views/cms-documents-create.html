@@ -1,0 +1,38 @@
+<div>
+    <h5 ng-if="!modal.allowedTemplateIds.length">{{::'This Document Cannot Have Children'|translate}}</h5>
+    <form ng-if="modal.allowedTemplateIds.length" novalidate>
+        <label>{{::'Title'|translate}}</label>
+        <input type="text" class="form-control" ng-model="modal.item.title" placeholder="{{::'page title'|translate}}" required>
+        <br>
+            
+        <label>{{::'Url Name'|translate}} ({{::'optional'|translate}}) </label>
+        <input type="text" class="form-control" ng-model="modal.item.urlName" placeholder="{{::'url-name'|translate}}">
+        <br>
+        
+        <label>{{::'Template'|translate}}</label>
+        <div class="dropdown form-group" uib-dropdown>
+            <button class="btn btn-default btn-sm btn-block" uib-dropdown-toggle>
+                <span>
+                    <i ng-if="modal.template" class="fa fa-fw {{modal.template.icon||'fa-file-o'}}"></i>
+                    {{modal.template.name||modal.template.id.replace('views/','')||('Choose Template'|translate)}}
+                </span>
+            </button>
+            <ul class="dropdown-menu full-width">
+                <li ng-repeat="template in modal.templates" ng-if="modal.allowedTemplateIds.indexOf(template.id) > -1">
+                    <a href="" ng-click="modal.item.template=template.id;modal.item.icon=template.icon;modal.item.color=template.color;modal.template=template">
+                        <i class="fa fa-fw {{template.icon||'fa-file-o'}}"></i> {{template.name||template.id.replace('views/','')}}
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div>{{modal.template.description}}</div>
+        
+    </form>
+    <br>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-if="modal.allowedTemplateIds.length" ng-disabled="!modal.item.template || !modal.item.title" ng-click="modal.create(modal.item)">{{::'Create'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

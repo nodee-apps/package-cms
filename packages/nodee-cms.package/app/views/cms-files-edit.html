@@ -1,0 +1,10 @@
+<div>
+    <div ui-ace="{mode:modal.mode}" ng-model="modal.content" ng-style="{'height':modal.height}"></div>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-click="modal.update()">{{::'Update'|translate}}</button>
+        <button class="btn btn-primary" ng-click="modal.updateAndClose()">{{::'Update And Close'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

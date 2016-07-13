@@ -1,0 +1,44 @@
+<div>
+    <form name="attributesModalForm" novalidate style="display:table-row">
+        <div ng-repeat="attr in modal.attributes"
+             style="display:inline-block;vertical-align:top;min-width:120px;margin-left:2px;margin-top:20px;padding:5px;position:relative;border:1px solid #DDDDDD;"
+             ng-style="{'background-color':modal.isAttrDirty(attr)?'#FCE9C8':'#FFFFFF'}">
+            
+            <div style="position:absolute;top:-16px">
+                <div ng-if="attr.isList" class="btn-group btn-group-xs">
+                    <button class="btn btn-default" ng-click="modal.duplicateAttribute(attr, $index, modal.attributes)">
+                        <i class="fa fa-fw fa-copy"></i>
+                    </button>
+                    <button class="btn btn-default" ng-disabled="modal.isFirstInList(attr,$index,modal.attributes)" ng-click="modal.moveAttribute($index,$index-1,attr,modal.attributes)">
+                        <i class="fa fa-fw fa-arrow-left"></i>
+                    </button>
+                    <button class="btn btn-default" ng-disabled="modal.isLastInList(attr,$index,modal.attributes)" ng-click="modal.moveAttribute($index,$index+1,attr,modal.attributes)">
+                        <i class="fa fa-fw fa-arrow-right"></i>
+                    </button>
+                    <button class="btn btn-danger" ng-disabled="modal.isFirstInList(attr,$index,modal.attributes)&&modal.isLastInList(attr,$index,modal.attributes)" ng-click="modal.attributes.splice($index,1)">
+                        <i class="fa fa-fw fa-trash-o"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <div ng-if="attr.children">
+                    <label>{{attr.group}}</label>
+                    <div ng-repeat="attr in attr.children">
+                        <div ng-include="attr.editor.template"></div>
+                    </div>
+                </div>
+                <div ng-if="!attr.children">
+                    <label>{{attr.name||attr.propName}}</label>
+                    <div ng-include="attr.editor.template"></div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="clearfix"></div>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-disabled="!attributesModalForm.$valid || !modal.allValid(modal.attributes)" ng-click="modal.update()">{{::'Update'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

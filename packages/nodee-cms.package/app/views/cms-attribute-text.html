@@ -1,0 +1,21 @@
+
+<input ng-if="attr.settings.isList"
+       class="form-control input-sm"
+       type="text"
+       ng-model="attr.value"
+       ng-change="attr.dirty=true"
+       ng-required="attr.settings.required"
+       ng-minlength="attr.settings.minLength"
+       ng-maxlength="attr.settings.maxLength"
+       placeholder="{{attr.settings.placeholder}}"
+       ng-list>
+    
+<input ng-if="!attr.settings.isList"
+       class="form-control input-sm"
+       type="text"
+       ng-model="attr.value"
+       ng-change="attr.dirty=true"
+       ng-required="attr.settings.required"
+       ng-minlength="attr.settings.minLength"
+       ng-maxlength="attr.settings.maxLength"
+       placeholder="{{attr.settings.placeholder}}">

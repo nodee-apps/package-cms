@@ -1,0 +1,7 @@
+<textarea   class="form-control input-sm"
+            ng-model="attr.value"
+            ng-change="attr.dirty=true"
+            ng-required="attr.settings.required"
+            ng-minlength="attr.settings.minLength"
+            ng-maxlength="attr.settings.maxLength"
+            rows="{{attr.settings.rows||'2'}}"></textarea>

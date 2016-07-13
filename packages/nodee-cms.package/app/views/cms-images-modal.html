@@ -1,0 +1,87 @@
+
+<div ng-controller="CmsImagesCtrl">
+    <div class="row">
+        <div class="col-xs-4">
+            <div class="dropdown form-group" uib-dropdown>
+                <button class="btn btn-default btn-sm btn-block text-right nowrap" uib-dropdown-toggle>
+                    <i ng-if="document.id" class="fa fa-fw {{document.icon||'fa-file-o'}}"></i>
+                    {{document.title}}
+                    <span ng-if="!document.title">{{::'Search In All'|translate}}</span>
+                </button>
+                <div class="dropdown-menu" style="padding:5px;width:100%">
+                    <button ng-click="selectAll()" class="btn btn-primary btn-block btn-sm"> {{::'Search In All'|translate}}</button>
+                    <div ne-tree="tree"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-8 text-right">
+            <span>
+                <span class="file-upload btn btn-sm btn-default">
+                    <i class="fa fa-folder-open text-muted"></i>
+                    <span class="hidden-xs">{{::'Browse To Upload'|translate}}</span>
+                    <ne-file multiple="true" ng-model="upload.files" ng-change="upload.start(files)"></ne-file>
+                </span>
+                <button class="btn btn-danger btn-sm" 
+                        ng-disabled="!grid.getSelectedItems().length" 
+                        ng-click="removeSelected()">
+                    <i class="fa fa-fw fa-trash-o"></i> 
+                    <span class="hidden-xs">{{::'Remove Selected'|translate}}</span>
+                </button>
+            </span>
+        </div>
+    </div>
+    
+    <div ne-file-drop-area="image/*" ne-files-drop="upload.start(files)">
+        <div class="row">
+            <div class="col-xs-12" style="min-height:130px;">
+                <i class="fa fa-5x fa-upload"></i>
+                <div class="grid-files-item" ng-repeat="item in grid.items">
+                    <div class="grid-files-item-body" ng-class="{selected:item.$selected}" ng-click="grid.selectItem(item);modal.generateUrl(item)" uib-tooltip="{{item.name}} ({{item.width}}x{{item.height}})">
+                        <img ng-src="/cmsimages/{{item.id}}/cx100x100.{{item.ext}}">
+                    </div>
+                    <a href="/cmsimages/{{item.id}}.{{item.ext}}" target="_blank" class="grid-files-item-link">
+                        <small class="nowrap"><i class="fa fa-fw fa-mail-forward"></i> {{::item.name}}</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-right:20px" ne-grid-pagination="grid" ne-grid-pagination-size="xs"></div>
+    
+    <hr>
+    <div class="row">
+        <div class="col-xs-7">
+            <input type="text" class="form-control input-sm" ng-model="modal.url" placeholder="{{::'http://image-url'|translate}}">
+        </div>
+        <div class="col-xs-5">
+            <form class="form-inline pull-right" novalidate>
+                <div class="dropdown form-group" uib-dropdown>
+                    <button class="btn btn-default btn-sm" uib-dropdown-toggle>
+                        <i class="fa fa-fw {{modal.resize.mode.icon}}"></i>&nbsp;
+                        <i class="fa fa-fw fa-caret-down"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li ng-repeat="option in modal.resize.options">
+                            <a href="" ng-click="modal.resize.mode=option;createUrl();modal.generateUrl(grid.getSelectedItems()[0])"><i class="fa fa-fw {{option.icon}}"></i>&nbsp;{{::option.name|translate}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <input style="width:60px;" type="number" ng-disabled="modal.widthAuto" class="form-control input-sm" ng-model="modal.width" ng-change="modal.generateUrl(grid.getSelectedItems()[0])" />
+                </div>
+                <div class="form-group">
+                    <input style="width:60px;" type="number" ng-disabled="modal.heightAuto" class="form-control input-sm" ng-model="modal.height" ng-change="modal.generateUrl(grid.getSelectedItems()[0])" />
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <hr>
+    <div class="pull-right">
+        <button class="btn btn-default btn-mini" ng-click="modal.hide()">{{::'Cancel'|translate}}</button>
+        <button class="btn btn-mini btn-primary" ng-disabled="!modal.url" ng-click="modal.insertImage(modal.url,modal.imgId)">{{::'Insert'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+    
+</div>

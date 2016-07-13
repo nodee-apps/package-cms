@@ -37,12 +37,12 @@ node_modules
 .jscodehints.json
 
 # configs
-controllers
-public
-views
-databases
-config
-tmp
+/controllers
+/public
+/views
+/databases
+/config
+/tmp
 #config-debug
 config-release
 

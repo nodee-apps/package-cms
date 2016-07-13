@@ -1,0 +1,21 @@
+<div>
+    <form novalidate>
+        <label>{{::'Allow Roles'|translate}}</label>
+        <input type="text" class="form-control" ng-model="modal.item.allowRoles" ng-list placeholder="{{::'role1, role2, ...'|translate}}">
+        <br>
+        
+        <label>{{::'Deny Roles'|translate}}</label>
+        <input type="text" class="form-control" ng-model="modal.item.denyRoles" ng-list placeholder="{{::'role1, role2, ...'|translate}}">
+        <br>
+        
+        <label>{{::'Require SSL'|translate}}</label>
+        <input type="checkbox" ng-model="modal.item.requireSSL">
+        <br>
+    </form>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-click="modal.update(modal.item)">{{::'Update'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

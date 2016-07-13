@@ -1,0 +1,360 @@
+
+<script type="text/ng-template" id="views/cms-forms-editor-bool.html">
+    <label class="checkbox checkbox-default">
+        <input type="checkbox" ng-model="model.value">
+        <i class="checkbox-icon"></i>
+    </label>
+</script>
+<script type="text/ng-template" id="views/cms-forms-editor-text.html">
+    <input type="text" class="form-control input-sm" ng-model="model.value" placeholder="{{placeholder}}">
+</script>
+<script type="text/ng-template" id="views/cms-forms-editor-list.html">
+    <input type="text" class="form-control input-sm" ng-model="model.value" placeholder="{{placeholder||'value1,value2,...'|translate}}" ng-list>
+</script>
+<script type="text/ng-template" id="views/cms-forms-editor-number.html">
+    <input type="number" class="form-control input-sm" ng-model="model.value" placeholder="{{placeholder}}">
+</script>
+<script type="text/ng-template" id="views/cms-forms-editor-date.html">
+    <input type="text"
+	   class="form-control input-sm"
+	   placeholder="{{placeholder||'Pick Date'|translate}}"
+	   ng-model="model.value"
+	   uib-datepicker-popup
+	   is-open="isopened"
+	   show-button-bar="true"
+	   ng-click="isopened=!isopened">
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-fw fa-list-alt"></i> {{::'Forms'|translate}}
+                <div class="pull-right">
+                    <button class="pull-left btn btn-success btn-sm" ng-click="createModal()"><i class="fa fa-plus"></i> {{::'Create Form'|translate}}</button>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <table class="table grid">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{{::'Description'|translate}}</th>
+                        <th>{{::'Redirect'|translate}}</th>
+                        <th>&nbsp;</th>
+                        <th>{{::'Allow CORS'|translate}}</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat-start="item in grid.items">
+                        <td>
+                            {{item.id}}
+                        </td>
+                        <td>
+                            <input type="text" class="form-control input-sm" ng-model="item.description" ne-grid-update-blur>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control input-sm" ng-model="item.redirect" placeholder="{{::'/thank-you'|translate}}" ne-grid-update-blur>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-default" ng-model="item.$expanded.schema" ng-change="item.$expanded={schema:item.$expanded.schema};" uib-btn-checkbox>
+                                <i class="fa fa-gears fa-fw"></i> 
+                                <span class="hidden-xs">{{::'Data Schema'|translate}}</span>
+                            </button>
+                            <button class="btn btn-sm btn-default" ng-model="item.$expanded.entries" ng-change="item.$expanded={entries:item.$expanded.entries};createEntriesGrid(item)" uib-btn-checkbox>
+                                <i class="fa fa-database fa-fw"></i> 
+                                <span class="hidden-xs">{{::'Entries'|translate}}</span>
+                            </button>
+                            <button class="btn btn-sm btn-default" ng-model="item.$expanded.mailer" ng-change="item.$expanded={mailer:item.$expanded.mailer};" uib-btn-checkbox>
+                                <i class="fa fa-envelope-o fa-fw"></i> 
+                                <span class="hidden-xs">{{::'Emails'|translate}}</span>
+                            </button>
+                        </td>
+                        <td>
+                            <label class="checkbox checkbox-default">
+                                <input type="checkbox" ng-model="item.allowCors" ng-change="grid.updateItem(item)">
+                                <i class="checkbox-icon"></i>
+                            </label>
+                        </td>
+                        <td class="grid-row-xs">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-sm btn-danger" ng-click="removeModal(item)">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr ng-if="item.$expanded.schema" ng-init="getFieldTypes()">
+                        <td colspan="10" class="grid-row-details">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <table class="table table-hover table-condensed grid" style="background-color:transparent;">
+                                        <thead>
+                                            <tr>
+                                                <th>{{::'Property Name'|translate}}</th>
+                                                <th>&nbsp;</th>
+                                                <th>{{::'Required'|translate}}</th>
+                                                <th>{{::'Sanitizer'|translate}}</th>
+                                                <th>{{::'Validator'|translate}}</th>
+                                                <th>{{::'Default Value'|translate}}</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="(propName,definition) in parseSchema(item)">
+                                                <td>
+                                                    {{propName}}
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-default" ng-click="toggleEntryKey(propName, item)" ng-class="{'active':item.$entryKey===propName}">
+                                                        <i class="fa fa-fw fa-key"></i>
+                                                        <span class="hidden-xs">{{::'Is Pairing Key'|translate}}</span>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <label class="checkbox checkbox-default">
+                                                        <input type="checkbox" ng-model="definition.required">
+                                                        <i class="checkbox-icon"></i>
+                                                    </label>
+                                                </td>
+                                                <td>
+                                                    <select class="input-sm pull-left" 
+                                                            ng-options="s.name as s.name|translate for (id,s) in fieldTypes.sanitizers" 
+                                                            ng-model="definition.$sanitizer" 
+                                                            ng-change="definition.sanitizer={id:definition.$sanitizer.id}">
+                                                    </select>
+                                                    <div ng-if="definition.$sanitizer && definition.$sanitizer.optsType!=='bool'" 
+                                                         style="width:150px;" 
+                                                         class="pull-left" 
+                                                         ne-form-field-editor 
+                                                         type="definition.$sanitizer.optsType" 
+                                                         model="definition.sanitizer" 
+                                                         placeholder="definition.$sanitizer.placeholder">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <select class="input-sm pull-left" 
+                                                            ng-change="definition.validator={id:definition.$validator.id};deleteKey('value',definition)" 
+                                                            ng-options="v.name as v.name|translate for (id,v) in fieldTypes.validators" 
+                                                            ng-model="definition.$validator">
+                                                    </select>
+
+                                                    <div ng-if="definition.$validator && definition.$validator.optsType!=='bool'" 
+                                                         style="width:150px;" 
+                                                         class="pull-left" 
+                                                         ne-form-field-editor 
+                                                         type="definition.$validator.optsType" 
+                                                         model="definition.validator" 
+                                                         placeholder="definition.$validator.placeholder">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div ng-if="definition.$validator" 
+                                                         ne-form-field-editor 
+                                                         type="definition.$validator.type" 
+                                                         model="definition" 
+                                                         placeholder="definition.$validator.placeholder"></div>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-danger btn-sm" ng-click="deleteKey(propName, item.$entrySchema)">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="input-group" style="width:300px;">
+                                                <input type="text" class="form-control input-sm" ng-model="item.$entrySchema.$newId" placeholder="{{::'Unique Property Name'|translate}}">
+                                                <span class="input-group-btn">
+                                                    <button class="btn btn-default btn-sm"
+                                                            ng-disabled="!item.$entrySchema.$newId || item.$entrySchema.$newId.indexOf('.')>-1 || item.$entrySchema.$newId.indexOf('$')>-1 || item.$entrySchema[item.$entrySchema.$newId]"
+                                                            ng-click="item.$entrySchema[item.$entrySchema.$newId]={};item.$entrySchema.$newId=null">
+                                                        <i class="fa fa-plus"></i> {{::'Add Form Field'|translate}}
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <button class="btn btn-success btn-sm pull-right" ng-click="buildSchema(item);grid.updateItem(item)">
+                                                <i class="fa fa-fw fa-save"></i> {{::'Update Schema'|translate}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr ng-if="item.$expanded.mailer" ng-init="loadMailers()">
+                        <td colspan="10" class="grid-row-details">
+                            <div class="row">
+                                <div class="col-xs-12" ng-repeat="email in item.emails">
+                                    <form class="form-horizontal form-condensed" novalidate>
+                                        <fieldset>
+                                            <div class="row">
+                                                <div class="col-xs-12 col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Watch Property'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <select class="form-control input-sm" ng-options="k as k for (k,p) in item.entrySchema" ng-model="email.propName"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Send On'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <select class="form-control input-sm" ng-options="so as so|translate for so in ['define','change','always','never']" ng-model="email.sendOn"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Mailer'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <select ng-options="m for m in mailers" class="form-control input-sm" ng-model="email.mailer"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Document Url'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <div class="dropdown" uib-dropdown>
+                                                                <button class="btn btn-default btn-sm btn-block" uib-dropdown-toggle>
+                                                                    <span>
+                                                                        {{email.documentUrl||'(Choose Document)'|translate}}
+                                                                    </span>
+                                                                </button>
+                                                                <div class="dropdown-menu full-width">
+                                                                    <div ne-tree="getEmailDocTree(email)" style="margin-left:20px;"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xs-12 col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Subject'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <input type="text" class="form-control input-sm" ng-model="email.subject" placeholder="{{::'Thank you [[leadName]] !'|translate}}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'Send To'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <input type="text" class="form-control input-sm" ng-model="email.to" placeholder="{{::'[[leadEmail]]'|translate}}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label">{{::'CC / BCC'|translate}}</label>
+                                                        <div class="col-sm-9">
+                                                            <div class="row">
+                                                                <div class="col-xs-6">
+                                                                    <input type="text" class="form-control input-sm" ng-model="email.cc" placeholder="{{::'[[ccTo]]'|translate}}">
+                                                                </div>
+                                                                <div class="col-xs-6">
+                                                                    <input type="text" class="form-control input-sm" ng-model="email.bcc" placeholder="{{::'[[bccTo]]'|translate}}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-xs-12 text-right padding-top-sm">
+                                                            <button class="btn btn-xs btn-danger pull-right" style="margin-top:3px" ng-click="item.emails.splice($index,1)">
+                                                                <i class="fa fa-fw fa-trash-o"></i> {{::'Remove Email'|translate}}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </form>
+                                </div>
+                                <div class="col-xs-12" style="margin-top:20px;">
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <button class="btn btn-sm btn-default" ng-click="item.emails.push({})">
+                                                <i class="fa fa-fw fa-plus"></i> {{::'Add Email'|translate}}
+                                            </button>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <button class="btn btn-sm btn-success pull-right" ng-click="grid.updateItem(item)">
+                                                <i class="fa fa-fw fa-save"></i> {{::'Update Emails'|translate}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr ng-repeat-end ng-if="item.$expanded.entries">
+                        <td colspan="10" class="grid-row-details">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <table class="table table-hover table-condensed" style="background-color:transparent;">
+                                        <thead>
+                                            <tr>
+                                                <th>{{::'Key'|translate}}</th>
+                                                <th>{{::'Created DT'|translate}}</th>
+                                                <th>{{::'Modified DT'|translate}}</th>
+                                                <th>{{::'Data'|translate}}</th>
+                                                <th>{{::'Logs'|translate}}</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat-start="entry in item.$entGrid.items">
+                                                <td>{{entry.key}}</td>
+                                                <td>{{entry.createdDT}}</td>
+                                                <td>{{entry.modifiedDT}}</td>
+                                                <td>
+                                                    <button class="btn btn-default btn-xs" ng-model="entry.$expanded" uib-btn-checkbox>
+                                                        <i class="fa fa-fw fa-database"></i>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <a href="" ng-click="entryLogModal(log)" ng-repeat="log in entry.logs" style="margin:2px;" class="btn btn-xs" ng-class="{'btn-default':log.status!=='error','btn-warning':log.status==='error'}">{{$index+1}}</a>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-danger btn-sm" ng-click="item.$entGrid.removeItem(entry)">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr ng-repeat-end ng-if="entry.$expanded">
+                                                <td colspan="10" class="grid-row-details">
+                                                    <div class="row" style="background-color:#fff;">
+                                                        <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+                                                            <div class="row" ng-repeat="(key,value) in entry.data">
+                                                                <div class="col-xs-5">
+                                                                    <strong>{{key}}</strong>
+                                                                </div>
+                                                                <div class="col-xs-7">
+                                                                    <!--
+                                                                    <div ne-form-field-editor
+                                                                     type="fieldTypes.validators[item.entrySchema[key]].type"
+                                                                     model="value"
+                                                                     placeholder="definition.$validator.placeholder">
+                                                                    </div>-->
+                                                                    <div>{{value}}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-xs-12">
+                                    <div class="row" ne-grid-pagination="item.$entGrid" ne-grid-pagination-size="xs"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="panel-footer">
+                <div class="row" ne-grid-pagination="grid"></div>
+            </div>
+        </div>
+    </div>
+</div>

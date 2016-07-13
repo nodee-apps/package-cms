@@ -1,0 +1,29 @@
+<div>
+    <form novalidate>
+        <label>{{::'Add Widget'|translate}}</label>
+        <div class="dropdown form-group" uib-dropdown>
+            <button class="btn btn-default btn-sm btn-block" uib-dropdown-toggle>
+                <span>
+                    <i ng-if="modal.widget" class="fa fa-fw {{modal.widget.icon||'fa-file-o'}}"></i>
+                    {{modal.widget.name||modal.widget.id.replace('views/','')||'Choose Widget'|translate}}
+                </span>
+            </button>
+            <ul class="dropdown-menu full-width">
+                <li ng-repeat="widget in modal.widgets" class="">
+                    <a href="" ng-click="modal.widget=widget">
+                        <i class="fa fa-fw {{widget.icon||'fa-file-o'}}"></i> {{widget.name||widget.id.replace('views/','')}}
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div>{{modal.widget.description}}</div>
+        
+    </form>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-disabled="!modal.widget" ng-click="modal.create(modal.widget)">{{::'Create'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>

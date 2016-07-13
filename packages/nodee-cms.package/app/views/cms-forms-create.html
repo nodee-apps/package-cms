@@ -1,0 +1,15 @@
+<div>
+    <form novalidate>
+        <label>{{::'Unique Form ID'|translate}} ({{::'required'|translate}}) </label>
+        <input type="text" class="form-control input-sm" ng-model="modal.item.id" placeholder="{{::'myContactForm'|translate}}">
+        <br>
+        <label>{{::'Form Description'|translate}}</label>
+        <textarea type="text" rows="4" class="form-control input-sm" ng-model="modal.item.description" placeholder="{{::'some description for other users'|translate}}"></textarea>
+    </form>
+    <hr/>
+    <div class="pull-right">
+        <button class="btn btn-default" ng-click="modal.hide()">{{::'Close'|translate}}</button>
+        <button class="btn btn-primary" ng-disabled="!modal.item.id" ng-click="modal.create(modal.item)">{{::'Create'|translate}}</button>
+    </div>
+    <div class="clearfix"></div>
+</div>
