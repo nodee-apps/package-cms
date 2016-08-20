@@ -50,6 +50,7 @@ config-release
 packages/nodee-admin.package
 packages/nodee-admin-languages.package
 packages/nodee-total.package
+packages/nodee-transmit.package
 
 # angular module sources
 packages/nodee-admin.package/app/angular-modules/src
@@ -58,3 +59,5 @@ packages/nodee-admin.package/app/angular-modules/*.command
 # theme sources
 packages/nodee-admin.package/app/theme/src
 packages/nodee-admin.package/app/theme/*.command
+
+*.zip

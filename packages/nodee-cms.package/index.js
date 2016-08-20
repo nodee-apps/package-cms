@@ -1317,7 +1317,7 @@ function install(){
     /*
      * Public image
      */
-    framework.file('/cmsimages/*.jpg', imageRouter);
+    framework.file(function(req, res){ return req.url.match(/\/cmsimages\/.+/); }, imageRouter, ['.jpg','.jpeg','.png','.gif'])
     
 };
 
