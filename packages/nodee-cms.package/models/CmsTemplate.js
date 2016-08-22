@@ -38,7 +38,9 @@ Template.backupRemoveBulk = function(query, instance){
 /*
  * Ensure Indexes
  */
-Template.init();
+
+// init in index.js
+// Template.init();
 
 /*
  * Document methods

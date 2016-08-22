@@ -66,7 +66,8 @@ Image.extendDefaults({
  * Ensure Indexes
  */
 
-Image.init();
+// init in index.js
+// Image.init();
 
 
 /*

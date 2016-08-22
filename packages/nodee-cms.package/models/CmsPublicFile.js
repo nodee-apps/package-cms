@@ -54,14 +54,21 @@ PublicFile.backupRemoveBulk = function(query, instance){
 /*
  * Ensure Indexes, etc...
  */
-PublicFile.init(function(){
-    PublicFile.collection().all(function(err, files){
-        if(err) throw err;
-        else for(var i=0;i<files.length;i++){
-            if(files[i].isFile) setEtag(files[i].id, files[i].isFile, files[i].modifiedDT);
-        }
+
+
+// init in index.js
+PublicFile.afterInit = function(cb){
+    PublicFile.init(function(){
+        PublicFile.collection().all(function(err, files){
+            if(err) throw err;
+            else for(var i=0;i<files.length;i++){
+                if(files[i].isFile) setEtag(files[i].id, files[i].isFile, files[i].modifiedDT);
+            }
+
+            cb();
+        });
     });
-});
+};
 
 
 /*

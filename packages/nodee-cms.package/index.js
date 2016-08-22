@@ -518,6 +518,25 @@ Cms.prototype.mail = function(to, subject, document, bracketsData, cb){ // cb(er
 
 function install(){
     
+    var nodee = MODULE('nodee-total');
+    
+    // set readyness
+    nodee.setReady('nodee-cms', false);
+    nodee.setHealthy('nodee-cms', true);
+    
+    var cmsModelsCount = 6, modelsInited = 0;
+    function checkReadyness(){
+        modelsInited++;
+        if(modelsInited === cmsModelsCount) nodee.setReady('nodee-cms', true);
+    }
+    
+    Model('CmsImage').init(checkReadyness);
+    Model('CmsTemplate').init(checkReadyness);
+    Model('CmsPublicFile').afterInit(checkReadyness);
+    Model('CmsDocument').init(checkReadyness);
+    Model('CmsDocumentTrash').init(checkReadyness);
+    Model('CmsForm').init(checkReadyness);
+    
     var admin = MODULE('nodee-admin');
     var basePath = admin.basePath;
     cms.init(basePath);
@@ -1317,7 +1336,7 @@ function install(){
     /*
      * Public image
      */
-    framework.file(function(req, res){ return req.url.match(/\/cmsimages\/.+/); }, imageRouter, ['.jpg','.jpeg','.png','.gif'])
+    framework.file(function(req, res){ return req.url.match(/\/cmsimages\/.+/); }, imageRouter, ['.jpg','.jpeg','.png','.gif']);
     
 };
 

@@ -39,7 +39,8 @@ CmsFormEntry.extendDefaults({
     }
 });
 
-CmsFormEntry.init();
+// init in index.js
+// CmsFormEntry.init();
 
 CmsFormEntry.on('beforeCreate', function(next){ // next([err])
     if(!this.isValid()) this.validateData(next);

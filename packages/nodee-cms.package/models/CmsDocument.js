@@ -93,8 +93,9 @@ CmsDocumentTrash.extendDefaults(CmsDoc.getDefaults()).extendDefaults({
  * Ensure Indexes
  */
 
-CmsDoc.init();
-CmsDocumentTrash.init();
+// init in index.js
+// CmsDoc.init();
+// CmsDocumentTrash.init();
 
 /*
  * Document methods
