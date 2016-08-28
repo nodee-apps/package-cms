@@ -30,7 +30,7 @@ require('./models/CmsFormTransmitAPI.js');
 var cms = new Cms();
 module.exports.id = 'nodee-cms';
 module.exports.name = 'nodee-cms';
-module.exports.version = '0.6.1';
+// module.exports.version = '0.6.1'; - moved to nodee-cms.package.json
 module.exports.instance = cms;
 module.exports.dependencies = ['nodee-total', 'nodee-admin'];
 module.exports.install = install;

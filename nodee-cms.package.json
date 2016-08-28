@@ -1,0 +1,29 @@
+{
+    "name":"nodee-cms",
+    "version":"0.9.0",
+    "dependencies":[ "nodee-total", "nodee-admin" ],
+    "config":{
+        "admin-base-path": {
+            "description": "Cms admin area base path, all resources inside need user to be authenticated with role 'adminarea' or 'admin'",
+            "value": "/cmsadmin",
+            "required": true
+        },
+        "cms-documents-caching": {
+            "description": "Leave blank if app will scale horizontally",
+            "value": "1m"
+        },
+
+        "cms-datasource-host":{
+            "description": "Leave blank to inherit from primary datasource",
+            "value": ""
+        },
+        "cms-datasource-port":{
+            "description": "Leave blank to inherit from primary datasource",
+            "value": ""
+        },
+        "cms-datasource-database":{
+            "description": "Leave blank to inherit from primary datasource",
+            "value": ""
+        }
+    }
+}
