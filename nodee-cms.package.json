@@ -21,6 +21,14 @@
             "description": "Leave blank to inherit from primary datasource",
             "value": ""
         },
+        "cms-datasource-username":{
+            "description": "Leave blank to inherit from primary datasource",
+            "value": ""
+        },
+        "cms-datasource-password":{
+            "description": "Leave blank to inherit from primary datasource",
+            "value": ""
+        },
         "cms-datasource-database":{
             "description": "Leave blank to inherit from primary datasource",
             "value": ""

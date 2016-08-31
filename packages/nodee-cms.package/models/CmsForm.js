@@ -30,6 +30,8 @@ CmsFormEntry.extendDefaults({
     connection:{
         host: framework.config['cms-datasource-host'] || framework.config['datasource-primary-host'],
         port: framework.config['cms-datasource-port'] || framework.config['datasource-primary-port'],
+        username: framework.config['cms-datasource-username'] || framework.config['datasource-primary-username'],
+        password: framework.config['cms-datasource-password'] || framework.config['datasource-primary-password'],
         database: framework.config['cms-datasource-database'] || framework.config['datasource-primary-database'] || framework.config.name,
         collection: 'cms_form_entries',
         indexes:{
@@ -112,6 +114,8 @@ CmsForm.extendDefaults({
     connection:{
         host: framework.config['cms-datasource-host'] || framework.config['datasource-primary-host'],
         port: framework.config['cms-datasource-port'] || framework.config['datasource-primary-port'],
+        username: framework.config['cms-datasource-username'] || framework.config['datasource-primary-username'],
+        password: framework.config['cms-datasource-password'] || framework.config['datasource-primary-password'],
         database: framework.config['cms-datasource-database'] || framework.config['datasource-primary-database'] || framework.config.name,
         collection: 'cms_forms'
     }
