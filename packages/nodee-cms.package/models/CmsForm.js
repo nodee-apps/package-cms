@@ -131,7 +131,8 @@ Model.relations.create('CmsFormEntry.formId [form] --> CmsForm [entries]', { mai
  * Ensure Indexes
  */
 
-CmsForm.init();
+// init in index.js
+// CmsFormEntry.init();
 
 /*
  * Business logic

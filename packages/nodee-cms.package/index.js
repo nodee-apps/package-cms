@@ -524,7 +524,7 @@ function install(){
     nodee.setReady('nodee-cms', false);
     nodee.setHealthy('nodee-cms', true);
     
-    var cmsModelsCount = 6, modelsInited = 0;
+    var cmsModelsCount = 7, modelsInited = 0;
     function checkReadyness(){
         modelsInited++;
         if(modelsInited === cmsModelsCount) nodee.setReady('nodee-cms', true);
@@ -536,6 +536,7 @@ function install(){
     Model('CmsDocument').init(checkReadyness);
     Model('CmsDocumentTrash').init(checkReadyness);
     Model('CmsForm').init(checkReadyness);
+    Model('CmsFormEntry').init(checkReadyness);
     
     var admin = MODULE('nodee-admin');
     var basePath = admin.basePath;

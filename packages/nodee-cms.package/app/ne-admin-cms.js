@@ -1661,7 +1661,8 @@ angular.module('neAdmin.cms',['neRest',
     };
                                 
     $scope.getPreviewUrl = function(doc){
-        if(doc.published){
+        if(!doc.published || $location.host().indexOf('localhost') === 0) return $scope.iframeUrl;
+        else {
             var port = $location.port();
             if(port === 443 || port === 80) return doc.url;
             
@@ -1670,7 +1671,6 @@ angular.module('neAdmin.cms',['neRest',
             if(domain) return doc.url.replace(domain, domain+':'+port);
             else return doc.url;
         }
-        else return $scope.iframeUrl;
     };
     
     $scope.tree.removeModal = function(item){
