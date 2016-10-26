@@ -858,19 +858,34 @@ function install(){
     }
     
     function execParser(parser, document, template, data, next){
-        if(parser){
-            try {
-                parser.call({
-                    template: template.template,
-                    containerId: template.containerId,
-                    widgetId: template.widgetId
-                }, data, document, next);
-            }
-            catch(err){
-                next(new Error('Cms: parsing template "'+template.template+'" of widget "'+template.widgetId+'" in container "'+template.containerId+'" failed').cause(err));
-            }
+        if(!parser) return next();
+        
+        var d = domain.create();
+
+        function handleError(err){
+            d.exit();
+            d.removeListener('error', handleError);
+            next(new Error('Cms: parsing template "'+template.template+'" of widget "'+template.widgetId+'" in container "'+template.containerId+'" failed').details({ code:'EXECFAIL', cause:err }));
         }
-        else next();
+        d.on('error', handleError);
+
+        try {
+            d.bind(parser).call({
+                template: template.template,
+                containerId: template.containerId,
+                widgetId: template.widgetId
+            }, data, document, function(err){
+                d.exit();
+                d.removeListener('error', handleError);
+                if(err) next(new Error('Cms: parsing template "'+template.template+'" of widget "'+template.widgetId+'" in container "'+template.containerId+'" failed').details({ code:'EXECFAIL', cause:err }));
+                else next();
+            });
+        }
+        catch(err){
+            d.exit();
+            d.removeListener('error', handleError);
+            next(new Error('Cms: parsing template "'+template.template+'" of widget "'+template.widgetId+'" in container "'+template.containerId+'" failed').details({ code:'EXECFAIL', cause:err }));
+        }
     }
     
     
