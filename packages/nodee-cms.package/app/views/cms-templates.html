@@ -460,9 +460,9 @@
             <tr>
                 <td>&nbsp;</td>
                 <td><small>{{::'CSS Selector'|translate}}</small></td>
-                <td><small>{{::'Inner HTML'|translate}}</small></td>
+                <td><small>{{::'Replace Inner HTML'|translate}}</small></td>
                 <td><small>{{::'Element Attributes'|translate}}</small></td>
-                <td><small>{{::'Repeat HTML'|translate}}</small></td>
+                <td><small>{{::'Repeat HTML Element'|translate}}</small></td>
                 <td>&nbsp;</td>
             </tr>
         </thead>
@@ -506,11 +506,28 @@
                     <div class="dropdown form-group" style="margin:0" uib-dropdown>
                         <div class="input-group inut-group-sm">
                             <span class="input-group-btn">
-                                <button uib-tooltip="{{::'Inside Repeat Element'|translate}}" class="btn btn-sm" ng-class="{'btn-default':!keysLength(m.inside),'btn-success':keysLength(m.inside)}" ng-disabled="!m.repeatKey" ng-change="m.$details={repeat:m.$details.repeat}" ng-model="m.$details.repeat" uib-btn-checkbox>
+                                <button uib-tooltip="{{::'Inside Repeated Element'|translate}}" 
+                                        tooltip-placement="left" 
+                                        class="btn btn-sm" 
+                                        ng-class="{'btn-default':!keysLength(m.inside),'btn-success':keysLength(m.inside)}" 
+                                        ng-disabled="!m.repeatKey" 
+                                        ng-change="m.$details={repeat:m.$details.repeat}" 
+                                        ng-model="m.$details.repeat" 
+                                        uib-btn-checkbox>
                                     <i class="fa fa-code"></i>
                                 </button>
                             </span>
                             <input type="text" placeholder="{{::'model property'|translate}}" class="input-sm" uib-dropdown-toggle ng-model="m.repeatKey">
+                            <span class="input-group-btn">
+                                <button uib-tooltip="{{::'Hide Element if Data Missing or Empty Array'|translate}}" 
+                                        tooltip-placement="right" 
+                                        class="btn btn-default btn-sm" 
+                                        ng-disabled="!m.repeatKey" 
+                                        ng-model="m.repeatHideDefault" 
+                                        uib-btn-checkbox>
+                                    <i class="fa fa-eraser"></i>
+                                </button>
+                            </span>
                         </div>
                         <ul class="dropdown-menu" ng-if="propertySuggestions">
                             <li ng-repeat="s in propertySuggestions track by $index">

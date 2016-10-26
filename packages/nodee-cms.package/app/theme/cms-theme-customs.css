@@ -7,3 +7,11 @@
 .richtext-editor[contenteditable="true"] td { min-width:20px; border: 1px dotted grey; }
 .richtext-editor[contenteditable="true"] ul { list-style-type: disc; padding-left: 40px; }
 .richtext-editor[contenteditable="true"] ol { list-style-type: decimal; padding-left: 40px; }
+
+/*
+ * tabs padding
+ */
+
+.nav.nav-tabs > li > a {
+    padding: 5px;
+}

@@ -1,6 +1,7 @@
 'use strict';
 
 var util = require('util'),
+    domain = require('domain'),
     Model = require('nodee-model'),
     viewEngine = require('nodee-view'),
     neUtils = require('nodee-utils'),
@@ -190,6 +191,31 @@ Cms.prototype.view = function(ctrl, document, cb){ // cb(err, html)
     else view(ctrl, document.template, document, cb);
 };
 
+function safeExecCmsCtrl(cms_ctrl, ctrl, model, next){
+    
+    var d = domain.create();
+    
+    function handleError(err){
+        d.exit();
+        d.removeListener('error', handleError);
+        next(err);
+    }
+    d.on('error', handleError);
+        
+    try {
+        d.bind(cms_ctrl).call(ctrl, model, function(err){
+            d.exit();
+            d.removeListener('error', handleError);
+            next(err);
+        });
+    }
+    catch(err){
+        d.exit();
+        d.removeListener('error', handleError);
+        next(err);
+    }
+}
+
 function view(ctrl, viewName, model, cb){ // cb(err, html)
     var mode = model.$viewMode || model._viewMode || '';
     
@@ -298,8 +324,7 @@ function view(ctrl, viewName, model, cb){ // cb(err, html)
         if(cms_ctrl && typeof cms_ctrl !== 'function') next(new Error('Cms render view: Cannot run cms controller '+
                                                                       'for template "' +controllers[i].name+ '" in widget "'+controllers[i].widgetId+'", it is not function'));
         else if(cms_ctrl) {
-            try { cms_ctrl.call(ctrl, model, next); }
-            catch(err){ next(err); }
+            safeExecCmsCtrl(cms_ctrl, ctrl, model, next);
         }
         else next();
         

@@ -470,14 +470,16 @@ angular.module('neAdmin.cms',['neRest',
         $document.find('#htmlParser').remove();
         
         // create new sandbox iframe
-        iframeElm = angular.element('<iframe id="htmlParser" style="display:none;" sandbox="allow-same-origin"></iframe>');
-        $document.find('body').eq(0).append(iframeElm);
-        iframeDoc = iframeElm[0].contentDocument || iframeElm[0].contentWindow.document;
-        
-        iframeDoc.open();
-        try { iframeDoc.write(htmlString); } catch(err){ }
-        iframeDoc.close();
-        return angular.element(iframeDoc);
+        try {
+            iframeElm = angular.element('<iframe id="htmlParser" style="display:none;" sandbox="allow-same-origin"></iframe>');
+            $document.find('body').eq(0).append(iframeElm);
+            iframeDoc = iframeElm[0].contentDocument || iframeElm[0].contentWindow.document;
+
+            iframeDoc.open();
+            iframeDoc.write(htmlString);
+            iframeDoc.close();
+            return angular.element(iframeDoc);
+        } catch(err){ }
     }
     
     this.count = function(htmlString, selector){
@@ -998,6 +1000,7 @@ angular.module('neAdmin.cms',['neRest',
                             return result;
                         })(mapping[key].attrs),
                         repeatKey: mapping[key].repeat,
+                        repeatHideDefault: mapping[key].showDefault === false,
                         inside: mapping[key].inside
                     });
                 }
@@ -1045,6 +1048,7 @@ angular.module('neAdmin.cms',['neRest',
                             
                             })(m.attrs),
                             repeat: m.repeatKey || undefined,
+                            showDefault: m.repeatHideDefault === true ? false : undefined,
                             inside: m.inside
                         };
                     }
