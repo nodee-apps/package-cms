@@ -25,7 +25,7 @@ CmsTemplateTransmitAPI.transmitFields = { content:true };
 
 framework.rest(transmitBasePath +'/cms-templates', 'CmsTemplate', [
     { route:'/', collection:'all', flags:[ 'get', '!transmit_download' ] },
-    { route:'/{id}', instance:'create', flags:[ 'post', 'json' ] },
-    { route:'/{id}', instance:'update', flags:[ 'put', 'json' ] },
+    { route:'/{id}', instance:'create', flags:[ 'post', 'json' ], length:3000 }, // up to 3000kB
+    { route:'/{id}', instance:'update', flags:[ 'put', 'json' ], length:3000 }, // up to 3000kB
     { route:'/{id}', instance:'remove', flags:[ 'delete' ] }
 ], ['authorize','!transmit','!transmit_upload']);
