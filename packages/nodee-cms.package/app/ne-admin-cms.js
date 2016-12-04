@@ -1249,7 +1249,7 @@ angular.module('neAdmin.cms',['neRest',
         }
     };    
 }])
-.controller('CmsDocumentsCtrl', ['$scope', '$location', 'neCms', 'neObject', 'neLocal', 'NeTree', 'neNotifications','neModals','neEditable','neColorPalette256','neFontAwesomeIcons',function($scope, $location, cms, object, local, Tree, notify, modals, editable, palette256, faIcons){
+.controller('CmsDocumentsCtrl', ['$scope', '$location', 'neAdmin', 'neCms', 'neObject', 'neLocal', 'NeTree', 'neNotifications','neModals','neEditable','neColorPalette256','neFontAwesomeIcons',function($scope, $location, admin, cms, object, local, Tree, notify, modals, editable, palette256, faIcons){
     
     $scope.tree = new Tree({
         id: 'cms.documents',
@@ -1269,8 +1269,17 @@ angular.module('neAdmin.cms',['neRest',
 
             cms.templates.meta({id:item.template, documentId:item.id }, function(data){
 
+                // check ancestors, refuse refresh when ancestors changed,
+                // means document changed position in tree, and whole tree have to be reloaded
+                if($scope.document.ancestors.join(',') !== data.document.ancestors.join(',')) {
+                    return notify.warning('Document has changed position in sitemap tree, please RELOAD whole admin page');
+                }
+
+                $scope.document = object.extend('data', $scope.document, data.document);
+
                 // extend mappings
                 editable.mappings = extendMappings(data.mappings, $scope.document.templateSettings);
+                
                 editable.markNotDirty();
                 //$scope.templateMeta = data;
                 $scope.attributes = fillAttributes(editable.mappings[0].mapping.attributes||[], $scope.document.attributes);
@@ -1461,7 +1470,7 @@ angular.module('neAdmin.cms',['neRest',
                 return notify.warning('Document has changed position in sitemap tree, please RELOAD whole admin page');
             }
             
-            $scope.document = angular.extend($scope.document, data.document);
+            $scope.document = object.extend('data', $scope.document, data.document);
             
             // extend mappings
             editable.mappings = extendMappings(data.mappings, $scope.document.templateSettings);
@@ -1504,6 +1513,11 @@ angular.module('neAdmin.cms',['neRest',
         }
         return result;
     }
+
+    $scope.translations = [];
+    admin.configs.one('translations', function(data){
+        $scope.translations = data;
+    });
     
     // publish sitemap tree via cms service, and remove on scope destroy 
     cms.sitemapTree = $scope.tree;
@@ -1512,11 +1526,13 @@ angular.module('neAdmin.cms',['neRest',
     });
     
     $scope.tree.createModal = function(parent){
-        if(!$scope.pages) cms.pages.find({}, function(data){
+        cms.pages.find({}, function(data){
             $scope.pages = data;
-            createModal(parent);
+            cms.documents.one({ id:parent.id, $fields:{ langId:true } }, function(data){
+                parent.langId = data.langId;
+                createModal(parent);
+            });
         });
-        else createModal(parent);
     };
     
     function createModal(parent){
@@ -1555,10 +1571,11 @@ angular.module('neAdmin.cms',['neRest',
                     modals.get('cms.documents.create').hide();
                 });
             },
-            item: {},
+            item: { langId: parent.langId || 'base' },
             templates: $scope.pages,
             allowedTemplateIds: allowedTemplateIds,
-            isAllowedTemplate: isAllowedTemplate
+            isAllowedTemplate: isAllowedTemplate,
+            translations: $scope.translations
         });
     }
     
@@ -1587,8 +1604,9 @@ angular.module('neAdmin.cms',['neRest',
                 });
             },
             item: item,
-            faIcons: faIcons,   
-            palette256: palette256
+            faIcons: faIcons,
+            palette256: palette256,
+            translations: $scope.translations
         });
     };
     
@@ -1661,7 +1679,6 @@ angular.module('neAdmin.cms',['neRest',
     
     $scope.urlModified = function(){
         $scope.document.$editDetails = false;
-        if($scope.document.$children) $scope.tree.loadItems($scope.document, true);
     };
                                 
     $scope.getPreviewUrl = function(doc){
@@ -2244,5 +2261,76 @@ angular.module('neAdmin.cms',['neRest',
             
         }
     };
-});
+})
+.controller('CmsConfigRedirectsCtrl',['$scope','$window',function($scope, $window){
+    $scope.height = $window.innerHeight - 200;
 
+    $scope.item.config.script = $scope.item.config.script || ''+
+    '/* example: */\n'+
+    '\n'+
+    '// var redirects = {\n'+
+    '//    \'yourwebsite.com/somepath/\': \'302 yourwebsite.com/somepath-redirect/\',\n'+
+    '//    \'yourwebsite.com/someoldpath/\': \'301 yourwebsite.com/somepath-redirect/\'\n'+
+    '// };\n'+
+    '// return redirects[ host+pathname ] || redirects[ host+pathname+\'/\' ];\n';
+
+    function parseUrl(url){
+        var parser = document.createElement('a');
+        parser.href = url;
+
+        var urlObj = {
+            href: parser.href,
+            protocol: parser.protocol,
+            //slashes: parser.slashes,
+            host: parser.host,
+            //auth: parser.auth,
+            hostname: parser.hostname,
+            port: parser.port,
+            pathname: parser.pathname,
+            path: parser.pathname + parser.search,
+            hash: parser.hash,
+            search: parser.search,
+            query: (function(s){ // parsed search as object
+                var q = {};
+                for(var i=0;i<s.length;i++) {
+                    s[i] = s[i].split('=');
+                    if(q[s[i][0]]){
+                        if(Array.isArray(q[s[i][0]])) q[s[i][0]].push(s[i][1]);
+                        else {
+                            q[s[i][0]] = [ q[s[i][0]] ];
+                            q[s[i][0]].push(s[i][1]);
+                        }
+                    }
+                    else q[s[i][0]] = s[i][1]
+                }
+                return q;
+            })(parser.search.slice(1).split('&')), 
+            //origin: parser.origin
+        };
+        parser = null;
+
+        return urlObj;
+    }
+
+    var globalVarsIsolation = 'var ' + ['Promise','Generator','GeneratorFunction','Function','Buffer','ArrayBuffer','Reflect','Proxy','eval','setTimeout','clearTimeout','setInterval','clearInterval','setImmediate','clearImmediate','global','GLOBAL','require','process','__dirname','__filename','console','exports','module'].join(',') + ';';
+
+    $scope.testResult = '';
+    $scope.testArguments = '';
+    $scope.testRedirectController = function(testUrl, script){
+        testUrl = testUrl || '';
+        if(testUrl.slice(0,4) !== 'http') testUrl = 'http://' + testUrl;
+
+        var scriptBody = globalVarsIsolation + '\n with(urlObj){\n' +script+ '\n}';
+        var urlObj = parseUrl(testUrl);
+
+        $scope.testArguments = '';
+        for(var key in urlObj) $scope.testArguments += key + ': ' +JSON.stringify(urlObj[key]) + '\n';
+
+        try {
+            $scope.testResult = new Function('urlObj', scriptBody).bind({})(urlObj) + '';
+        }
+        catch(err){
+            $scope.testResult = err.message; 
+        }
+    };
+}]);

@@ -99,9 +99,9 @@ var CmsForm = Model.define('CmsForm', [ 'MongoDataSource', 'Orderable' ], {
             mailer:{ isString:true }, // mailer config name, default is primary
             documentUrl:{ isString:true }, // url of document to send as email body
             subject:{ isString:true }, // subject of email to send
-            to:{ isString:true }, // comma separated list, can use brackets inside e.g. [[lead.email]]
-            cc:{ isString:true }, // comma separated list, can use brackets inside e.g. [[shareTo]]
-            bcc:{ isString:true } // comma separated list, can use brackets inside e.g. [[shareTo]]
+            to:{ isString:true }, // comma separated list, can use second layer template inside e.g. @lead.email
+            cc:{ isString:true }, // comma separated list, can use second layer template inside e.g. @shareTo
+            bcc:{ isString:true } // comma separated list, can use second layer template inside e.g. @shareTo
         })
     }
 });

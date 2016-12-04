@@ -1,5 +1,5 @@
 <div class="row" ng-init="item.config.length ? null : item.config.push({})">
-    <table class="table table-hover table-condensed table-transparent margin-bottom-xs">
+    <table class="table table-hover table-condensed table-transparent margin-bottom-xs grid">
         <thead>
             <tr>
                 <th class="hidden-xs">{{::'Execution Order'|translate}}</th>
@@ -11,7 +11,7 @@
         <tbody>
             <tr ng-repeat="route in item.config">
                 <td class="hidden-xs">
-                    <div class="btn-group btn-group-sm">
+                    <div class="btn-group btn-group-xs">
                         <button class="btn btn-default" disabled="disabled">
                             <strong>{{$index+1}}</strong>
                         </button>

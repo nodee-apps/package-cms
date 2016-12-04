@@ -11,7 +11,11 @@
         <label>{{::'Template Name'|translate}}</label>
         <input type="text" class="form-control input-sm" value="{{modal.item.templateName}}" disabled="disabled">
         <br>
-        
+
+        <label>{{::'Language'|translate}}</label>
+        <select class="form-control input-sm" ng-options="id as id for (id,lang) in modal.translations" ng-model="modal.item.langId"></select>
+        <br>
+
         <label>{{::'Icon'|translate}}</label> (<i class="fa fa-fw {{modal.item.icon||'fa-file-o'}}"></i>)
         <div class="dropdown" uib-dropdown>
             <input type="text" class="form-control input-sm" ng-model="modal.item.icon" placeholder="fa-file-o" uib-dropdown-toggle>

@@ -12,6 +12,7 @@ var CmsDoc = Model.define('CmsDocument', [ 'MongoDataSource', 'Orderable', 'Tree
     urlName: { defaultValue:'', isString:true, cleanUrl:true }, // onchange - update descs
     url:{ isString:true }, // readonly, inherited from parents
     published: { isBoolean:true }, // onchange - update descs
+    langId:{ isString:true },
     
     // advanced props
     //internalRedirect: { defaultValue:'', isString:true },
@@ -21,6 +22,7 @@ var CmsDoc = Model.define('CmsDocument', [ 'MongoDataSource', 'Orderable', 'Tree
     
     template:{ isString:true },
     templateName:{ isString:true }, // helper for sitemap traversing
+    templatePathName:{ isString:true }, // helper for sitemap traversing
     templateSettings:{}, // extend template attributes or editors settings { 'laylouts/page.html':{ attributes:{ 'propName':{ disabled:true } }, editors:{ 'selector':{ disabled:false } } } }
     icon:{ isString:true }, // css class of icon used in sitemap tree view, if none default will be used
     color:{ isString:true }, // background color used in sitemap tree view, if none white will be used
@@ -64,6 +66,7 @@ CmsDoc.extendDefaults({
             published:{ 'published':1 },
             template:{ 'template':1 },
             templateName:{ 'templateName':1 },
+            templatePathName:{ 'templatePathName':1 },
             contTemplates:{ 'contTemplates':1 }
         }
     },
@@ -141,6 +144,7 @@ CmsDoc.on('beforeCreate', function(next){ // next(err)
     if(!doc.urlName) return next(new Error('CmsDocument beforeCreate: INVALID').details({ code:'INVALID', validErrs:{ urlName:['required'] } }));
     
     doc.templateName = doc.template.split('/').pop().replace(/\.html$/g,'');
+    doc.templatePathName = doc.template.replace(/\.html$/g,'');
     doc.templateSettings = doc.templateSettings || {};
     doc.published = doc.published || false;
     
@@ -165,6 +169,7 @@ CmsDoc.on('beforeUpdate', function(next){ // next([err])
     // cannot change template of existing document
     doc.hide('template', 'getData');
     doc.hide('templateName', 'getData');
+    doc.hide('templatePathName', 'getData');
     
     doc.constructor.collection().findId(doc.id).fields({ url:1, urlName:1, published:1, requireSSL:1, allowRoles:1, denyRoles:1 }).one(function(err, oldDoc){
         if(err) next(err);
@@ -175,6 +180,7 @@ CmsDoc.on('beforeUpdate', function(next){ // next([err])
             doc.oldRequireSSL = oldDoc.requireSSL;
             doc.oldAllowRoles = oldDoc.allowRoles;
             doc.oldDenyRoles = oldDoc.denyRoles;
+            doc.oldLangId = oldDoc.langId;
             
             // create url and check if it's unique
             createUrl(doc, next);
@@ -293,9 +299,10 @@ function createUrl(doc, cb){ // cb(err, doc)
 function syncDescendants(doc, cb){ // cb(err)
     
     // urlName not changed, just perform bulk update
-    if(doc.oldUrlName === doc.urlName){
-        cb();
+    if(doc.oldUrlName === doc.urlName && doc.oldLangId === doc.langId){
+        return cb();
         
+        // TODO: remove example of bulk update
         //doc.constructor
         //.collection()
         //.find({
@@ -319,7 +326,7 @@ function syncDescendants(doc, cb){ // cb(err)
     }
     
     // url name changed, need to update all descendants
-    else doc.constructor
+    doc.constructor
         .collection()
         .find({ ancestors:doc.id })
         .fields({ id:1, url:1 })
@@ -334,6 +341,7 @@ function syncDescendants(doc, cb){ // cb(err)
                 //descendants[i].allowRoles = doc.allowRoles || doc.oldAllowRoles;
                 //descendants[i].denyRoles = doc.denyRoles || doc.oldDenyRoles;
                 //descendants[i].published = doc.published === undefined ? doc.oldPublished : doc.published;
+                descendants[i].langId = doc.langId;
                 
                 // sync url
                 var descOldUrl = descendants[i].url+'';

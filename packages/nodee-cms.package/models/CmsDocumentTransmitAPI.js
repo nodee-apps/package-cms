@@ -33,7 +33,7 @@ CmsDocumentTransmitAPI.transmitBulkCreate = true;
 
 framework.rest(transmitBasePath +'/cms-documents', 'CmsDocument', [
     { route:'/', collection:'all', includeHiddenFields:true, flags:[ 'get', '!transmit_download' ] },
-    { route:'/{id}', collection:'create', flags:[ 'post', 'json' ], length:20000 }, // up to 20000kB // allow bulk create to disable consistency checks
+    { route:'/{id}', collection:'create', flags:[ 'post', 'json' ], length:3000 }, // up to 20000kB // allow bulk create to disable consistency checks
     { route:'/{id}', instance:'update', flags:[ 'put', 'json' ], length:3000 }, // up to 3000kB
     { route:'/{id}', instance:'remove', flags:[ 'delete' ], length:3000 }, // up to 3000kB
 ], ['authorize','!transmit','!transmit_upload']);

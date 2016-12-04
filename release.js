@@ -30,7 +30,7 @@ total.http('release', options);
 //
 //if(cluster.isMaster){
 //    require('nis-model'); // require cache sync message system
-//    
+//
 //    var numCPUs = os.cpus().length;
 //    for(var i=0;i<numCPUs;i++) {
 //        // Run framework

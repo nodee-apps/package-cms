@@ -1,6 +1,6 @@
 {
     "name":"nodee-cms",
-    "version":"0.9.4",
+    "version":"0.9.5",
     "dependencies":[ "nodee-total", "nodee-admin" ],
     "config":{
         "admin-base-path": {
@@ -11,6 +11,10 @@
         "cms-documents-caching": {
             "description": "Leave blank if app will scale horizontally",
             "value": "1m"
+        },
+        "cms-redirects-caching": {
+            "description": "Caching of redirect controller script, default is 10 minutes",
+            "value": "10m"
         },
 
         "cms-datasource-host":{

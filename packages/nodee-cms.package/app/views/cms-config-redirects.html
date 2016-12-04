@@ -1,0 +1,66 @@
+<style>
+    .cms-redirects-config .tab-content { background-color: #fff; }
+</style>
+
+<div class="row cms-redirects-config" ng-controller="CmsConfigRedirectsCtrl">
+    <div class="col-xs-12 margin-bottom-lg">
+
+        <form class="form-horizontal form-condensed">
+            <fieldset>
+                <div class="form-group">
+                    <label class="col-sm-2 col-md-1 control-label">{{::'Disabled'|translate}}</label>
+                    <div class="col-sm-10 col-md-11">
+                        <label class="checkbox checkbox-default">
+                            <input type="checkbox" ng-model="item.config.disabled">
+                            <i class="checkbox-icon"></i>
+                            <small>{{::'by default, redirects are disabled'|translate}}</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 col-md-1 control-label">{{::'Test Url'|translate}}</label>
+                    <div class="col-sm-10 col-md-11">
+                        <span class="input-group">
+                            <input type="text" class="form-control input-sm" ng-model="item.testUrl" placeholder="http://{{::'yourlinktotest.com'|translate}}">
+                            <span class="input-group-btn">
+                                <button class="btn btn-sm btn-default" ng-click="testRedirectController(item.testUrl, item.config.script)">
+                                    {{::'Test Redirect Controller'|translate}}
+                                </button>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group" ng-if="testArguments">
+                    <label class="col-sm-2 col-md-1 control-label">{{::'Test Args.'|translate}}</label>
+                    <div class="col-sm-10 col-md-11 padding-top-sm">
+                        <small style="white-space:pre-wrap;">{{testArguments}}</small>
+                    </div>
+                </div>
+
+                <div class="form-group" ng-if="testResult">
+                    <label class="col-sm-2 col-md-1 control-label">{{::'Test Result'|translate}}</label>
+                    <div class="col-sm-10 col-md-11 padding-top-sm">
+                        <small style="white-space:pre-wrap;">{{testResult}}</small>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+
+        <uib-tabset class="margin-top-md margin-bottom-sm">
+            <uib-tab>
+                <uib-tab-heading>
+                    {{::'Redirect Controller'|translate}}
+                </uib-tab-heading>
+                <div ui-ace="{mode:'javascript'}" ng-model="item.config.script" style="height:" ng-style="{height:height+'px'}"></div>
+            </uib-tab>
+        </uib-tabset>
+
+        <small>
+            <strong>{{::'Request Properties'|translate}}:</strong> href, protocol, slashes, host, auth, hostname, port, pathname, search, path, query, hash<br>
+            <strong>{{::'Return if Temp Redirect'|translate}} (302):</strong> <i>return 'http://yoursite.com/somepage';</i> {{::'or'|translate}} <i>return '302 http://yoursite.com/somepage';</i><br>
+            <strong>{{::'Return if Permanent Redirect'|translate}} (301):</strong> <i>return '301 http://yoursite.com/somepage';</i> {{::'or'|translate}} <i>return 'permanent http://yoursite.com/somepage';</i><br>
+        </small>
+    </div>
+</div>

@@ -2,11 +2,15 @@
     <h5 ng-if="!modal.allowedTemplateIds.length">{{::'This Document Cannot Have Children'|translate}}</h5>
     <form ng-if="modal.allowedTemplateIds.length" novalidate>
         <label>{{::'Title'|translate}}</label>
-        <input type="text" class="form-control" ng-model="modal.item.title" placeholder="{{::'page title'|translate}}" required>
+        <input type="text" class="form-control input-sm" ng-model="modal.item.title" placeholder="{{::'page title'|translate}}" required>
         <br>
             
         <label>{{::'Url Name'|translate}} ({{::'optional'|translate}}) </label>
-        <input type="text" class="form-control" ng-model="modal.item.urlName" placeholder="{{::'url-name'|translate}}">
+        <input type="text" class="form-control input-sm" ng-model="modal.item.urlName" placeholder="{{::'url-name'|translate}}">
+        <br>
+
+        <label>{{::'Language'|translate}}</label>
+        <select class="form-control input-sm" ng-options="id as id for (id,lang) in modal.translations" ng-model="modal.item.langId"></select>
         <br>
         
         <label>{{::'Template'|translate}}</label>

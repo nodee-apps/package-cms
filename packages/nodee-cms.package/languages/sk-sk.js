@@ -1,14 +1,30 @@
 module.exports = {
 
     /*
-     * Config Routes
+     * Config Routes and Redirects
      */
     '/config':{
+        'Cms Routes':'TRANSLATE',
+        'Dynamic Routing bsed on Path Parameters like "/products/{productId}/*"':'TRANSLATE',
         'Execution Order': 'TRANSLATE',
         'Path Template': 'TRANSLATE',
         'Path Target': 'TRANSLATE',
         'Remove': 'TRANSLATE',
-        'Add Route': 'TRANSLATE'
+        'Add Route': 'TRANSLATE',
+
+        'Cms Redirects':'TRANSLATE',
+        'Temporary and Permanent Redirects Controller':'TRANSLATE',
+        'Disabled':'TRANSLATE',
+        'by default, redirects are disabled':'TRANSLATE',
+        'Test Url':'TRANSLATE',
+        'Test Redirect Controller':'TRANSLATE',
+        'Test Args.':'TRANSLATE',
+        'Test Result':'TRANSLATE',
+        'Redirect Controller':'TRANSLATE',
+        'Request Properties':'TRANSLATE',
+        'Return if Temp Redirect':'TRANSLATE',
+        'Return if Permanent Redirect':'TRANSLATE',
+        'or':'TRANSLATE'
     },
     
     /*
@@ -82,7 +98,8 @@ module.exports = {
         'Document Changed': 'TRANSLATE',
         'Document Content Changed. Switch to another will discard all changes. Are you sure ?': 'TRANSLATE',
         'Continue Without Saving': 'TRANSLATE',
-        'Save And Continue': 'TRANSLATE'
+        'Save And Continue': 'TRANSLATE',
+        'Languages':'TRANSLATE'
     },
 
     /*
@@ -240,12 +257,12 @@ module.exports = {
         'Mailer': 'TRANSLATE',
         'Document Url': 'TRANSLATE',
         'Subject': 'TRANSLATE',
-        'Thank you [[leadName]] !': 'TRANSLATE',
+        'Thank you @leadName !': 'TRANSLATE',
         'Send To': 'TRANSLATE',
-        '[[leadEmail]]': 'TRANSLATE',
+        '@leadEmail': 'TRANSLATE',
         'CC / BCC': 'TRANSLATE',
-        '[[ccTo]]': 'TRANSLATE',
-        '[[bccTo]]': 'TRANSLATE',
+        '@ccTo': 'TRANSLATE',
+        '@bccTo': 'TRANSLATE',
         'Remove Email': 'TRANSLATE',
         'Add Email': 'TRANSLATE',
         'Update Emails': 'TRANSLATE',

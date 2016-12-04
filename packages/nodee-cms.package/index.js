@@ -373,11 +373,17 @@ function view(ctrl, viewName, model, cb){ // cb(err, html)
                 }
             }
             
-            if(cb) {
-                if(ctrl.view) cb(null, ctrl.view('ne:'+model.template, model, true, containers));
-                else cb(null, framework.view('ne:'+model.template, model, true, containers));
-            }
-            else ctrl.view('ne:'+model.template, model, false, containers);
+            // load locals
+            Model('AdminTranslation').collection().cache().translations(model.langId || 'base', function(err, locals){
+                if(err) return cb(new Error('Cms: Cannot load translations').cause(err));
+
+                // render template
+                if(cb) {
+                    if(ctrl.view) cb(null, ctrl.view('ne:'+model.template, model, locals, true, containers));
+                    else cb(null, framework.view('ne:'+model.template, model, locals, true, containers));
+                }
+                else ctrl.view('ne:'+model.template, model, locals, false, containers);
+            });
         }
     });
 }
@@ -409,6 +415,11 @@ function addPrioritySorted(array, element){
     return array;
 }
 
+// redirects cache objects
+var globalVarsIsolation = 'var ' + object.globalsList.js.join(',') + ',' + object.globalsList.node.join(',') + ';';
+var lastRedirectModifiedDT;
+var redirectFnc;
+
 /**
  * Cms router
  * @param {Object} extendModel optional extends document model
@@ -434,86 +445,131 @@ Cms.prototype.router = function(extendModel){
     // e.g. //127.0.0.1/content
     var pathName = ctrl.uri.pathname.replace(/\/$/g, ''); // replace last "/";
     
-    admin.config.get('cmsroutes', function(err, cmsRoutes){
+    Model('AdminConfig').collection().findId('cmsredirects').cache(framework.config['cms-redirects-caching']||0).one(function(err, cmsRedirectsConfig){
         if(err) return ctrl.view500(err);
-        cmsRoutes = cmsRoutes || [];
+
+        var cmsRedirects = (cmsRedirectsConfig||{}).value;
         
-        var params = {}, vars;
-        if(!ctrl.search404) for(var i=0;i<cmsRoutes.length;i++){
-            vars = pathName.match(new RegExp(cmsRoutes[i].regex));
-            if(vars){ // path matched, fill vars
-                vars.shift(); // remove first matched element
-                for(var v=0;v<vars.length;v++) params[ cmsRoutes[i].vars[v] ] = vars[v];
-                pathName = cmsRoutes[i].target;
-                break;
+        if(!ctrl.search404 && cmsRedirects && !cmsRedirects.disabled && cmsRedirects.script){
+            var redirect, scriptBody;
+            try {
+                if(!lastRedirectModifiedDT || lastRedirectModifiedDT.getTime() !== cmsRedirectsConfig.modifiedDT.getTime()){
+                    scriptBody = globalVarsIsolation + '\n urlObj.query=query; with(urlObj){\n' +cmsRedirects.script+ '\n}';
+                    redirectFnc = new Function('urlObj','query', scriptBody).bind({});
+                    redirect = redirectFnc(ctrl.uri, ctrl.query);
+                }
+                else redirect = redirectFnc(ctrl.uri, ctrl.query);
+            }
+            catch(err){}
+            lastRedirectModifiedDT = cmsRedirectsConfig.modifiedDT;
+            
+            if(typeof redirect === 'string'){
+                var isPermanent = /^301 |permanent /.test(redirect);
+                return ctrl.redirect(redirect.replace(/^301 |302 |permanent /,''), isPermanent);
             }
         }
 
-        var urlPath = ctrl.search404 || ('//' + ctrl.uri.hostname + pathName);
-        ctrl.params = params;
-
-        // check if document exists
-        Model('CmsDocument').collection().cache().find({ url: urlPath }).one(function(err, doc){
-            if(err) ctrl.view500(err);
-            else if(!doc || !doc.published) {
-                if(ctrl.search404) ctrl.view404(); // route, include route to 404, not found, let app handle 404
-                else {
-                    ctrl.search404 = '//' + ctrl.uri.hostname + '/404';
-                    cms.router.call(ctrl);
+        admin.config.get('cmsroutes', function(err, cmsRoutes){
+            if(err) return ctrl.view500(err);
+            cmsRoutes = cmsRoutes || [];
+            
+            var params = {}, vars;
+            if(!ctrl.search404) for(var i=0;i<cmsRoutes.length;i++){
+                vars = pathName.match(new RegExp(cmsRoutes[i].regex));
+                if(vars){ // path matched, fill vars
+                    vars.shift(); // remove first matched element
+                    for(var v=0;v<vars.length;v++) params[ cmsRoutes[i].vars[v] ] = vars[v];
+                    pathName = cmsRoutes[i].target;
+                    break;
                 }
             }
-            else if(doc.requireSSL && !ctrl.isSecure){ // redirect to secured protocol
-                ctrl.redirect(ctrl.uri.href.replace(/^(http)/,'https'));
-            }
-            //else if(doc.internalRedirect){ // run internal redirect
-            //    cms.router.apply(ctrl, params);
-            //}
-            else { // route found, check roles
 
-                // extend model if it is defined
-                if(extendModel && object.isObject(extendModel)) object.extend(true, doc, extendModel);
+            var urlPath = ctrl.search404 || ('//' + ctrl.uri.hostname + pathName);
+            ctrl.params = params;
 
-                if((doc.denyRoles.length || doc.allowRoles.length) && !ctrl.user){
-                    // unauthorized request, let app handle 403
-                    ctrl.view403();
-                }
-                else if((doc.denyRoles.length || doc.allowRoles.length) && ctrl.user){
-                    // authorized request, check roles
-                    for(var i=0;i<doc.denyRoles.length;i++){
-                        if((ctrl.user.roles || []).indexOf(doc.denyRoles[i])){
-                            ctrl.view403(); // user has one of disabled roles, let app handle 403
-                            return;
-                        }
+            // check if document exists
+            Model('CmsDocument').collection().cache().find({ url: urlPath }).one(function(err, doc){
+                if(err) ctrl.view500(err);
+                else if(!doc || !doc.published) {
+                    if(ctrl.search404) ctrl.view404(); // route, include route to 404, not found, let app handle 404
+                    else {
+                        ctrl.search404 = '//' + ctrl.uri.hostname + '/404';
+                        cms.router.call(ctrl);
                     }
-                    for(var i=0;i<doc.allowRoles.length;i++){
-                        if((ctrl.user.roles || []).indexOf(doc.allowRoles[i])){
-                            cms.view(ctrl, doc); // user has one of allowed roles, continue routing
-                            return;
-                        }
-                    }
-                    ctrl.view403(); // user has none of allowed roles, let app handle 403
                 }
-                else cms.view(ctrl, doc);
-            }
+                else if(doc.requireSSL && !ctrl.isSecure){ // redirect to secured protocol
+                    ctrl.redirect(ctrl.uri.href.replace(/^(http)/,'https'));
+                }
+                //else if(doc.internalRedirect){ // run internal redirect
+                //    cms.router.apply(ctrl, params);
+                //}
+                else { // route found, check roles
+
+                    // extend model if it is defined
+                    if(extendModel && object.isObject(extendModel)) object.extend(true, doc, extendModel);
+
+                    if((doc.denyRoles.length || doc.allowRoles.length) && !ctrl.user){
+                        // unauthorized request, let app handle 403
+                        ctrl.view403();
+                    }
+                    else if((doc.denyRoles.length || doc.allowRoles.length) && ctrl.user){
+                        // authorized request, check roles
+                        for(var i=0;i<doc.denyRoles.length;i++){
+                            if((ctrl.user.roles || []).indexOf(doc.denyRoles[i])){
+                                ctrl.view403(); // user has one of disabled roles, let app handle 403
+                                return;
+                            }
+                        }
+                        for(var i=0;i<doc.allowRoles.length;i++){
+                            if((ctrl.user.roles || []).indexOf(doc.allowRoles[i])){
+                                cms.view(ctrl, doc); // user has one of allowed roles, continue routing
+                                return;
+                            }
+                        }
+                        ctrl.view403(); // user has none of allowed roles, let app handle 403
+                    }
+                    else cms.view(ctrl, doc);
+                }
+            });
         });
     });
 };
 
 Cms.prototype.sendMail =
-Cms.prototype.mail = function(to, subject, document, bracketsData, cb){ // cb(err)
+Cms.prototype.mail = function(to, subject, document, model2, cb){ // cb(err)
     var cms = this;
     if(arguments.length===4 && typeof arguments[3] === 'function'){
         cb = arguments[3];
-        bracketsData = null;
+        model2 = null;
     }
     
-    if(typeof document === 'string') Model('CmsDocument').collection().findId(document).one(function(err, document){
-        if(err && cb) cb(err);
+    // load locals
+    Model('AdminTranslation').collection().cache().translations(document.langId || 'base', function(err, locals){
+        if(err && cb) return cb(err);
         else if(err) throw err;
-        else if(!document && cb) cb(new Error('Cms.prototype.sendMail: CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
-        else if(!document) throw new Error('Cms.prototype.sendMail: CmsDocument NOTFOUND').details({ code:'NOTFOUND' })
+
+        if(typeof document === 'string') Model('CmsDocument').collection().findId(document).one(function(err, document){
+            if(err && cb) cb(err);
+            else if(err) throw err;
+            else if(!document && cb) cb(new Error('Cms.prototype.sendMail: CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
+            else if(!document) throw new Error('Cms.prototype.sendMail: CmsDocument NOTFOUND').details({ code:'NOTFOUND' })
+            else {
+                if(model2) document.$model2 = model2;
+                cms.view(document, function(err, html){
+                    if(err && cb) cb(err);
+                    else if(err) throw err;
+                    else framework.sendMail({
+                        to: to,
+                        subject: subject,
+                        model: document,
+                        body: html,
+                        locals: locals
+                    }, cb);
+                });
+            }
+        });
         else {
-            if(bracketsData) document.$brackets = bracketsData;
+            if(model2) document.$model2 = model2;
             cms.view(document, function(err, html){
                 if(err && cb) cb(err);
                 else if(err) throw err;
@@ -521,24 +577,12 @@ Cms.prototype.mail = function(to, subject, document, bracketsData, cb){ // cb(er
                     to: to,
                     subject: subject,
                     model: document,
-                    body: html
+                    body: html,
+                    locals: locals
                 }, cb);
             });
         }
     });
-    else {
-        if(bracketsData) document.$brackets = bracketsData;
-        cms.view(document, function(err, html){
-            if(err && cb) cb(err);
-            else if(err) throw err;
-            else framework.sendMail({
-                to: to,
-                subject: subject,
-                model: document,
-                body: html
-            }, cb);
-        });
-    }
 }
 
 function install(){
@@ -621,7 +665,29 @@ function install(){
         defaultValue:[],
         Model: CmsRoute
     };
-    
+
+    // Cms 301,302 redirects templates can be defined in admin
+    admin.config.items.cmsredirects = {
+        name: 'Cms Redirects',
+        description: 'Temporary and Permanent Redirects Controller',
+        templateUrl: 'views/cms-config-redirects.html',
+        icon: 'fa-mail-reply-all',
+        array: false, // will be validated as array of Models
+        keyValue: false, // will be validated as key - Model
+        defaultValue:{
+            script:'',
+            disabled:true
+        },
+        Model: Model.define({
+            script:{ isString:true },
+            disabled:{ isBoolean:true }
+        })
+    };
+
+    // register ace module in config route, because of cmsredirects editor
+    admin.routes[ '/config' ].load.push({ name:'ui.ace', files:[framework.isDebug ? '/3rd-party/ace/ace.js' : '//cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js', basePath+'angular-editable/ui-ace.js' ] });
+    admin.routes[ '/config' ].load.push({ name:'admin.cms', files:[ basePath+'ne-admin-cms.js']});
+
     // replace admin theme by cms-theme
     admin.styles.splice(admin.styles.indexOf(basePath+'theme/ne-theme.css'), 1, basePath+'theme/cms-theme.css');
     admin.styles.push(basePath+'theme/cms-theme-customs.css');
@@ -687,6 +753,7 @@ function install(){
     
     // admin views
     framework.mapping(basePath+'views/cms-config-routes.html', '@nodee-cms/app/views/cms-config-routes.html');
+    framework.mapping(basePath+'views/cms-config-redirects.html', '@nodee-cms/app/views/cms-config-redirects.html');
     
     framework.mapping(basePath+'views/cms-attribute-checkbox.html', '@nodee-cms/app/views/cms-attribute-checkbox.html');
     framework.mapping(basePath+'views/cms-attribute-image.html', '@nodee-cms/app/views/cms-attribute-image.html');
@@ -991,8 +1058,11 @@ function install(){
         if(view.layout){
             var layoutId = view.layout+(view.layout.match(/\.html$/g) ? '' : '.html');
             layout = viewEngine.getView(viewEngine.viewDirId+'/'+layoutId);
-            mappings.push({ id:layoutId, mapping:layout.mapping });
-            addPartialsMappings(layout.partials, mappings, tmpIds);
+
+            if(layout) {
+                mappings.push({ id:layoutId, mapping:layout.mapping });
+                addPartialsMappings(layout.partials, mappings, tmpIds);
+            }
         }
         
         // get partials (widgets) meta
@@ -1051,7 +1121,7 @@ function install(){
         for(var i=0;i<(partials||[]).length;i++){
             var id = partials[i].template+(partials[i].template.match(/\.html$/g) ? '' : '.html');
             var p = viewEngine.getView(viewEngine.viewDirId+'/'+id);
-            if(!tmpIds[ id ]) {
+            if(!tmpIds[ id ] && p) {
                 mappings.push({ id:id, mapping:p.mapping, isWidget:true });
                 tmpIds[ id ] = true;
             }
@@ -1194,7 +1264,9 @@ function install(){
         var ctrl = this;
         admin.config.get('mailers', function(err, mailersCfg){
             if(err) return ctrl.view500(err);
-            ctrl.json({ data: Object.keys(mailersCfg||{}) });
+            var mailers = [];
+            for(var key in mailersCfg) mailers.push({ id:key, name:mailersCfg[key].name });
+            ctrl.json({ data: mailers });
         });
     }
     
@@ -1285,24 +1357,29 @@ function install(){
 
                             (function(email){
                                 Model('CmsDocument').collection().cache().find({ url: email.documentUrl }).one(function(err, doc){
-                                    if(err) handleMailSent(err);
-                                    else if(!doc) handleMailSent(new Error('CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
-                                    else {
-                                        doc.$brackets = entry.data;
+                                    if(err) return handleMailSent(err);
+                                    else if(!doc) return handleMailSent(new Error('CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
+
+                                    Model('AdminTranslation').collection().cache().translations(doc.langId || 'base', function(err, locals){
+                                        if(err) return handleMailSent(err);
+
+                                        doc.$model2 = entry.data;
                                         cms.view(doc, function(err, html){
                                             if(err) handleMailSent(err);
                                             else framework.sendMail({
-                                                to: neUtils.template.render(email.to||'', entry.data),
-                                                cc: neUtils.template.render(email.cc||'', entry.data),
-                                                bcc: neUtils.template.render(email.bcc||'', entry.data),
-                                                subject: neUtils.template.render(email.subject||'', entry.data),
+                                                to: email.to,
+                                                cc: email.cc,
+                                                bcc: email.bcc,
+                                                subject: email.subject,
                                                 model: doc,
                                                 body: html,
-                                                config: (mailersCfg||{})[ email.mailer ]
+                                                config: (mailersCfg||{})[ email.mailer ],
+                                                locals: locals
 
                                             }, handleMailSent);
                                         });
-                                    }
+                                    });
+                                    
                                 });
                             })(email);
                         }
