@@ -194,6 +194,7 @@ Cms.prototype.view = function(ctrl, document, cb){ // cb(err, html)
 function safeExecCmsCtrl(cms_ctrl, ctrl, model, next){
     
     var d = domain.create();
+    var doneCalled = false;
     
     function handleError(err){
         d.exit();
@@ -206,12 +207,16 @@ function safeExecCmsCtrl(cms_ctrl, ctrl, model, next){
         d.bind(cms_ctrl).call(ctrl, model, function(err){
             d.exit();
             d.removeListener('error', handleError);
-            next(err);
+            if(!doneCalled) {
+                doneCalled = true;
+                next(err);
+            }
         });
     }
     catch(err){
         d.exit();
         d.removeListener('error', handleError);
+        doneCalled = true;
         next(err);
     }
 }
