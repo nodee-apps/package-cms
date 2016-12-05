@@ -24,7 +24,8 @@ module.exports = {
         'Request Properties':'TRANSLATE',
         'Return if Temp Redirect':'TRANSLATE',
         'Return if Permanent Redirect':'TRANSLATE',
-        'or':'TRANSLATE'
+        'or':'TRANSLATE',
+        'Don\'t forget, redirects are cached, by default 10 minutes':'TRANSLATE'
     },
     
     /*

@@ -379,7 +379,7 @@ function view(ctrl, viewName, model, cb){ // cb(err, html)
             }
             
             // load locals
-            Model('AdminTranslation').collection().cache().translations(model.langId || 'base', function(err, locals){
+            Model('AdminTranslation').getLocals(model.langId || 'base', function(err, locals){
                 if(err) return cb(new Error('Cms: Cannot load translations').cause(err));
 
                 // render template
@@ -549,7 +549,7 @@ Cms.prototype.mail = function(to, subject, document, model2, cb){ // cb(err)
     }
     
     // load locals
-    Model('AdminTranslation').collection().cache().translations(document.langId || 'base', function(err, locals){
+    Model('AdminTranslation').getLocals(document.langId || 'base', function(err, locals){
         if(err && cb) return cb(err);
         else if(err) throw err;
 
@@ -1365,7 +1365,7 @@ function install(){
                                     if(err) return handleMailSent(err);
                                     else if(!doc) return handleMailSent(new Error('CmsDocument NOTFOUND').details({ code:'NOTFOUND' }));
 
-                                    Model('AdminTranslation').collection().cache().translations(doc.langId || 'base', function(err, locals){
+                                    Model('AdminTranslation').getLocals(doc.langId || 'base', function(err, locals){
                                         if(err) return handleMailSent(err);
 
                                         doc.$model2 = entry.data;
