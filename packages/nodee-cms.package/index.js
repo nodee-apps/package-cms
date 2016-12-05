@@ -379,10 +379,10 @@ function view(ctrl, viewName, model, cb){ // cb(err, html)
 
                 // render template
                 if(cb) {
-                    if(ctrl.view) cb(null, ctrl.view('ne:'+model.template, model, locals, true, containers));
-                    else cb(null, framework.view('ne:'+model.template, model, locals, true, containers));
+                    if(ctrl.view) cb(null, ctrl.view('ne:'+model.template, model, locals, null, true, containers));
+                    else cb(null, framework.view('ne:'+model.template, model, locals, null, true, containers));
                 }
-                else ctrl.view('ne:'+model.template, model, locals, false, containers);
+                else ctrl.view('ne:'+model.template, model, locals, null, false, containers);
             });
         }
     });
