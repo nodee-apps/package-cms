@@ -6,7 +6,13 @@
         <li ng-if="show.html" ng-class="{'active':show.mode==='html'}"><a href="" ng-click="show.mode='html'">{{::'Html'|translate}}</a></li>
     </ul>
     <div class="tab-content" style="padding:3px;border:1px solid #DDDDDD;border-top:none;">
+
         <div ng-if="show.mode==='wysiwyg'">
+            <div text-angular ng-model="content.html" ta-toolbar="taToolbar" ng-change="updateHTML(content.html)"></div>
+        </div>
+        
+        <!-- TODO: remove -->
+        <div ng-if="show.mode==='old-wysiwyg'">
             <div style="margin-top:10px;margin-bottom:10px;">
                 <span class="btn-group">
                     <button class="btn btn-default btn-xs" ng-disabled="!selection.ws" ng-click="updateHTML(wsEditor.undo(selection.ws))"><i class="fa fa-undo"></i></button>
@@ -94,14 +100,6 @@
                  ne-selection-model="selection.ws"
                  ng-change="updateHTML(content.html)"
                  style="min-height:50px;overflow-x:auto"></div>
-            
-            <!--
-            <div text-angular
-                 ta-toolbar-button-class="btn btn-default btn-xs"
-                 ng-model="content.html"
-                 ng-change="updateHTML(content.html)">
-            </div>
-            -->
         </div>
         
         <div ng-if="show.mode==='markdown'">

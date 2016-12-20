@@ -1292,7 +1292,7 @@ angular.module('neAdmin.cms',['neRest',
     
     $scope.tree.focusItemModal = function(item){
         if(!$scope.canUpdateDocument()) return $scope.tree.focusItem(item);
-        if($scope.document === item) return;
+        if(!$scope.document || $scope.document === item) return;
         
         modals.create({
             id:'cms.documents.changed',
@@ -2265,6 +2265,7 @@ angular.module('neAdmin.cms',['neRest',
 .controller('CmsConfigRedirectsCtrl',['$scope','$window',function($scope, $window){
     $scope.height = $window.innerHeight - 200;
 
+    $scope.item.config = $scope.item.config || {};
     $scope.item.config.script = $scope.item.config.script || ''+
     '/* example: */\n'+
     '\n'+

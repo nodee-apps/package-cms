@@ -1,6 +1,70 @@
-angular.module('neEditable.text', ['neEditable','neContentEditors','neModals'])
+angular.module('neEditable.text', ['neEditable','neContentEditors','neModals','textAngularSetup'])
+.run(['$templateCache', '$window', 'taRegisterTool', 'taTranslations', 'taSelection', 'taToolFunctions', '$sanitize', 'taOptions','taTools','neModals', function($templateCache, $window, taRegisterTool, taTranslations, taSelection, taToolFunctions, $sanitize, taOptions, taTools, modals){
+
+    taRegisterTool('insertCmsImage', {
+        iconclass: 'fa fa-picture-o',
+        tooltiptext: taTranslations.insertImage.tooltip,
+        onElementSelect: {
+            element: 'img',
+            action: taToolFunctions.imgOnSelectAction
+        }
+    });
+
+    taTools.insertCmsImage.action = function(deferred, restoreSelection){
+        var ta = this;
+
+        modals.create({
+            id:'editable.richtext.insertImage',
+            title:'Insert Image',
+            include:'views/cms-images-modal.html',
+            removeOnClose: true,
+            //wide:true,
+            onClose: function(){
+                if(!this.inserted){
+                    restoreSelection();
+                    deferred.resolve();
+                }
+            },
+            insertImage: function(url){
+                this.inserted = true;
+                restoreSelection();
+                if(url && url !== '' && url !== 'http://') {
+                    ta.$editor().wrapSelection('insertImage', url, true);
+                }
+                deferred.resolve();
+                this.hide();
+            },
+            width: 200,
+            height: 200,
+            resize: {
+                mode: { name:'resize', icon:'fa-arrows-alt' },
+                options:[{ name:'resize', icon:'fa-arrows-alt' }, { name:'crop', icon:'fa-crop' }]
+            },
+            url:'',
+            generateUrl:function(image){
+                if(!image) return;
+                this.url = '/cmsimages/' +image.id;
+                if(this.width && this.height) this.url += '/'+ (this.resize.mode.name==='crop' ? 'cx' : '') +this.width+ 'x' +this.height+(this.bg_color ? 'x'+this.bg_color : '')+ '.' +image.ext;
+                else this.url += '.' +image.ext;
+                return this.url;
+            }
+        });
+
+        return false;
+    };
+
+}])
 .controller('EditableTextCtrl', ['$scope', 'neEditable', 'neMarkdown','neWysiwyg', 'neModals', function($scope, editable, markdown, wysiwyg, modals){
     
+    $scope.taToolbar = [
+        ['undo', 'redo'],
+        ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'pre', 'quote', 'table'],
+        ['bold', 'italics', 'underline', 'strikeThrough', 'ul', 'ol'],
+        ['color', 'bgColor', 'clear'],
+        ['justifyLeft','justifyCenter','justifyRight','justifyFull','indent','outdent'],
+        ['insertCmsImage', 'insertLink', 'insertVideo'] // 'html', 'insertImage' -> 'insertCmsImage', 'wordcount', 'charcount'
+    ];
+
     function init(){
         $scope.show = {
             wysiwyg: ($scope.container.editors.richtext || {}).wysiwyg,
