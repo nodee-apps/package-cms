@@ -346,41 +346,41 @@ function view(ctrl, viewName, model, cb){ // cb(err, html)
             else throw new Error('Cms: executing controller "' +ctrl.viewId+ '" for widget "' +ctrl.widgetId+ '" in container "' +ctrl.containerId+ '" failed').cause(err);
         }
         else { // view cms page
-            
-            // delete temporary props
-            delete ctrl.viewId;
-            delete ctrl.widgetId;
-            delete ctrl.containerId;
-            
-            // render all wingets in all containers
-            var containers = {};
-            for(var cId in (model.containers||{})){
-                containers[cId] = '';
-                for(var w=0;w<model.containers[cId].length;w++) {
-                    widget = viewEngine.getView( viewEngine.viewDirId+'/'+ model.containers[cId][w].template );
-                    if(widget) {
-                        try {
-                            var dynamicKeys = {};
-                            if(widget.mapping) dynamicKeys[ widget.mapping.baseProp ] = cId+'.'+model.containers[cId][w].id;
-                            containers[cId] += widget(model, mode, '', [], [], model.containers[cId][w].id, dynamicKeys); // (model, mode, body, partials, containers, widgetId, dynamicKeys)
-                        }
-                        catch(err){
-                            if(cb) return cb(new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err));
-                            else if(framework.isDebug || mode === 'admin'){
-                                var value = 'Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed ' + err.message + '\n\n' + err.stack + '\n\n';
-                                for(var prop in err) if(err.hasOwnProperty(prop)) value += prop + ': ' + err[prop] + '\n';
-                                framework.responseContent(ctrl.req, ctrl.res, 500, value, 'text/plain', ctrl.config['allow-gzip']);
-                            }
-                            else if(ctrl.view500) ctrl.view500(new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err));
-                            else throw new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err);
-                        }
-                    }
-                }
-            }
-            
+
             // load locals
             Model('AdminTranslation').getLocals(model.langId || 'base', function(err, locals){
                 if(err) return cb(new Error('Cms: Cannot load translations').cause(err));
+            
+                // delete temporary props
+                delete ctrl.viewId;
+                delete ctrl.widgetId;
+                delete ctrl.containerId;
+                
+                // render all wingets in all containers
+                var containers = {};
+                for(var cId in (model.containers||{})){
+                    containers[cId] = '';
+                    for(var w=0;w<model.containers[cId].length;w++) {
+                        widget = viewEngine.getView( viewEngine.viewDirId+'/'+ model.containers[cId][w].template );
+                        if(widget) {
+                            try {
+                                var dynamicKeys = {};
+                                if(widget.mapping) dynamicKeys[ widget.mapping.baseProp ] = cId+'.'+model.containers[cId][w].id;
+                                containers[cId] += widget(model, locals, mode, '', [], [], model.containers[cId][w].id, dynamicKeys); // (model, mode, body, partials, containers, widgetId, dynamicKeys)
+                            }
+                            catch(err){
+                                if(cb) return cb(new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err));
+                                else if(framework.isDebug || mode === 'admin'){
+                                    var value = 'Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed ' + err.message + '\n\n' + err.stack + '\n\n';
+                                    for(var prop in err) if(err.hasOwnProperty(prop)) value += prop + ': ' + err[prop] + '\n';
+                                    framework.responseContent(ctrl.req, ctrl.res, 500, value, 'text/plain', ctrl.config['allow-gzip']);
+                                }
+                                else if(ctrl.view500) ctrl.view500(new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err));
+                                else throw new Error('Cms: rendering widget "' +model.containers[cId][w].id+ '" in container "' +cId+ '" failed').cause(err);
+                            }
+                        }
+                    }
+                }
 
                 // render template
                 if(cb) {
