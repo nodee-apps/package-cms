@@ -1528,10 +1528,12 @@ angular.module('neAdmin.cms',['neRest',
     $scope.tree.createModal = function(parent){
         cms.pages.find({}, function(data){
             $scope.pages = data;
-            cms.documents.one({ id:parent.id, $fields:{ langId:true } }, function(data){
+            
+            if(parent) cms.documents.one({ id:parent.id, $fields:{ langId:true } }, function(data){
                 parent.langId = data.langId;
                 createModal(parent);
             });
+            else createModal();
         });
     };
     
@@ -1571,7 +1573,7 @@ angular.module('neAdmin.cms',['neRest',
                     modals.get('cms.documents.create').hide();
                 });
             },
-            item: { langId: parent.langId || 'base' },
+            item: { langId: (parent || {}).langId || 'base' },
             templates: $scope.pages,
             allowedTemplateIds: allowedTemplateIds,
             isAllowedTemplate: isAllowedTemplate,

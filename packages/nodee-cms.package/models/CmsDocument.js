@@ -43,6 +43,11 @@ CmsDoc.onFill(function(doc){
     return doc;
 });
 
+CmsDoc.onFetch(function(doc){
+    unescapeKeys(doc.templateSettings);
+    return doc;
+});
+
 
 /*
  * defaults
@@ -171,6 +176,9 @@ CmsDoc.on('beforeUpdate', function(next){ // next([err])
     doc.hide('templateName', 'getData');
     doc.hide('templatePathName', 'getData');
     
+    // templateSettings keys are selectors and may contains dots and dollars, therefore it need to be escaped
+    escapeKeys(doc.templateSettings);
+    
     doc.constructor.collection().findId(doc.id).fields({ url:1, urlName:1, published:1, requireSSL:1, allowRoles:1, denyRoles:1 }).one(function(err, oldDoc){
         if(err) next(err);
         else {
@@ -186,6 +194,12 @@ CmsDoc.on('beforeUpdate', function(next){ // next([err])
             createUrl(doc, next);
         }
     });
+});
+
+CmsDoc.on('afterUpdate', function(args, next){ // next([err])
+    // return original not escaped templateSettings
+    unescapeKeys(this.templateSettings);
+    next();
 });
 
 
@@ -284,6 +298,30 @@ function createUrl(doc, cb){ // cb(err, doc)
             });
         }
     });
+}
+
+function escapeKeys(obj){
+    if(Object.prototype.toString.call(obj) !== '[object Object]') return;
+
+    for(var key in obj){
+        escapeKeys(obj[key]);
+        if(key.match(/\.|\$/)) {
+            obj[ key.replace(/\./g, '\\uff0e').replace(/\$/g,'\\u0024') ] = obj[key];
+            delete obj[key];
+        }
+    }
+}
+
+function unescapeKeys(obj){
+    if(Object.prototype.toString.call(obj) !== '[object Object]') return;
+
+    for(var key in obj){
+        unescapeKeys(obj[key]);
+        if(key.match(/\\uff0e|\\u0024/)) {
+            obj[ key.replace(/\\uff0e/g,'.').replace(/\\u0024/g,'$') ] = obj[key];
+            delete obj[key];
+        }
+    }
 }
 
 /*
