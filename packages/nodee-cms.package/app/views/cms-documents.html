@@ -25,7 +25,7 @@
            draggable="false" 
            droppable 
            drop="tree.dropBefore(item)" 
-           class="tree-item-link btn btn-default" 
+           class="tree-item-link btn btn-default btn-intensive" 
            ng-style="{'background-color':item.color || '#fff','border-style':item.published ? 'solid' : 'dashed'}" 
            ne-color-contrast="item.color" 
            ng-click="tree.focusItemModal(item)" 
@@ -82,16 +82,16 @@
     </div>
     
     <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
-        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
-            <button class="btn btn-sm btn-default btn-light" 
-                    style="padding:5px" 
+        <div class="position-absolute" style="z-index:10;top:8px;left:-10px">
+            <button class="btn btn-sm btn-default" 
+                    style="background-color:#fff" 
                     ng-click="sidePanel.collapsed=!sidePanel.collapsed">
                 <i class="fa fa-arrows-h"></i>
             </button>
         </div>
         
         <div ng-if="!document" class="panel panel-default">
-            <div class="panel-heading">&nbsp;</div>
+            <div class="panel-heading" style="min-height:38px">&nbsp;</div>
             <div class="panel-body text-center padding-lg">
                 <h1>{{::'Sitemap and Content management'|translate}}</h1>
                 <span>{{::'Create "root page" or select existing in sitemap on left'|translate}}</span>
@@ -173,7 +173,7 @@
                             <i class="fa fa-fw fa-mail-forward"></i>
                         </a>
                     </div>
-                    <button class="btn btn-sm btn-success" ng-disabled="!canUpdateDocument()" ng-click="updateDocument()"><i class="fa fa-fw fa-save"></i> {{::'Save Changes'|translate}}</button>
+                    <button class="btn btn-sm btn-success btn-intensive" ng-disabled="!canUpdateDocument()" ng-click="updateDocument()"><i class="fa fa-fw fa-save"></i> {{::'Save Changes'|translate}}</button>
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -185,7 +185,7 @@
                                 <div style="min-width:120px;margin-left:2px;padding:5px;position:relative;border:1px solid #ddd;" ng-style="{'background-color':isAttrDirty(attr)?'#FCE9C8':'#fff'}">
 
                                     <div style="position:absolute;top:-16px;">
-                                        <div ng-if="attr.isList" class="btn-group btn-group-xs">
+                                        <div ng-if="attr.isList" class="btn-group btn-group-xs" style="background-color: #fff;border-top:1px solid #ddd;">
                                             <button class="btn btn-default" ng-click="duplicateAttribute(attr, $index)">
                                                 <i class="fa fa-fw fa-copy"></i>
                                             </button>

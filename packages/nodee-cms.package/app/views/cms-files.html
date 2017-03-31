@@ -6,7 +6,7 @@
                ng-click="item.$expanded=!item.$expanded;tree.load(item);"
                ng-class="{'fa-plus-square-o':!item.$expanded,'fa-minus-square-o':item.$expanded}"></i>
         </div>
-        <a href="" class="tree-item-link btn btn-default" ng-click="tree.focusItem(item)" ng-class="{'active':item.$focused}">
+        <a href="" class="tree-item-link btn btn-default btn-intensive" ng-click="tree.focusItem(item)" ng-class="{'active':item.$focused}">
             <span class="nowrap">
                 <i class="fa fa-fw" ng-class="{'fa-folder':item.isDir,'fa-folder-open':item.$expanded,'fa-file-code-o':item.isFile}"></i> 
                 {{::item.id.split('/').pop()}}
@@ -56,16 +56,16 @@
     </div>
     <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
         
-        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
-            <button class="btn btn-sm btn-default btn-light" 
-                    style="padding:5px" 
+        <div class="position-absolute" style="z-index:10;top:8px;left:-10px">
+            <button class="btn btn-sm btn-default" 
+                    style="background-color:#fff" 
                     ng-click="sidePanel.collapsed=!sidePanel.collapsed">
                 <i class="fa fa-arrows-h"></i>
             </button>
         </div>
 
         <div class="panel panel-default">
-            <div class="panel-heading">
+            <div class="panel-heading" style="min-height:38px">
                 <div class="row">
                     <div class="col-xs-12">
                         <i class="fa fa-fw fa-folder-o"></i> {{(folder.id||'Folder')|translate}}

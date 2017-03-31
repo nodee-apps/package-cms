@@ -1,4 +1,25 @@
 angular.module('neEditable.image', ['neEditable', 'neModals','neLocal'])
+.directive('editableOnImageLoad', function(){
+    return {
+        scope:{
+            editableOnImageLoad:'&'
+        },
+        link: function(scope, elm, attrs){
+            elm[0].addEventListener('load', triggerOnLoad);
+
+            function triggerOnLoad(){
+                scope.editableOnImageLoad({
+                    naturalWidth: elm[0].naturalWidth,
+                    naturalHeight: elm[0].naturalHeight
+                });
+            }
+
+            scope.$on('$destroy', function(){
+                elm[0].removeEventListener('load', triggerOnLoad);
+            });
+        }
+    }
+})
 .controller('EditableImageCtrl', ['$scope', 'neModals', function($scope, modals){
     
     function init(){

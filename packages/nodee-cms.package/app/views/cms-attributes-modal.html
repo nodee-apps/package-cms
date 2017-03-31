@@ -5,7 +5,7 @@
              ng-style="{'background-color':modal.isAttrDirty(attr)?'#FCE9C8':'#FFFFFF'}">
             
             <div style="position:absolute;top:-16px">
-                <div ng-if="attr.isList" class="btn-group btn-group-xs">
+                <div ng-if="attr.isList" class="btn-group btn-group-xs" style="background-color: #fff;border-top:1px solid #ddd;">
                     <button class="btn btn-default" ng-click="modal.duplicateAttribute(attr, $index, modal.attributes)">
                         <i class="fa fa-fw fa-copy"></i>
                     </button>

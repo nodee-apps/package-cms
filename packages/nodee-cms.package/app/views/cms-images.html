@@ -17,16 +17,16 @@
     </div>
     <div class="col-xs-12 col-sm-7 col-md-8 col-lg-9" ng-style="{width:sidePanel.collapsed ? '100%' : ''}">
 
-        <div class="position-absolute" style="z-index:10;top:8px;left:0px">
-            <button class="btn btn-sm btn-default btn-light" 
-                    style="padding:5px" 
+        <div class="position-absolute" style="z-index:10;top:8px;left:-10px">
+            <button class="btn btn-sm btn-default" 
+                    style="background-color:#fff" 
                     ng-click="sidePanel.collapsed=!sidePanel.collapsed">
                 <i class="fa fa-arrows-h"></i>
             </button>
         </div>
             
         <div class="panel panel-default">
-            <div class="panel-heading">
+            <div class="panel-heading" style="min-height:38px">
                 <div class="row">
                     <div class="col-xs-12">
                         <span ng-if="document.id">
@@ -64,7 +64,7 @@
                             <div class="grid-files-item-body" ng-class="{selected:item.$selected}" ng-click="grid.selectItem(item)" uib-tooltip="{{item.name}} ({{item.width}}x{{item.height}})">
                                 <img ng-src="/cmsimages/{{item.id}}/cx100x100.{{item.ext}}">
                             </div>
-                            <a href="/cmsimages/{{item.id}}.{{item.ext}}" target="_blank" class="grid-files-item-link">
+                            <a ng-href="/cmsimages/{{item.id}}.{{item.ext}}" target="_blank" class="grid-files-item-link">
                                 <small class="nowrap"><i class="fa fa-fw fa-mail-forward"></i> {{::item.name}}</small>
                             </a>
                         </div>
