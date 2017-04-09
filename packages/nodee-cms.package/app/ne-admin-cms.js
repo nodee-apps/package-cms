@@ -2272,8 +2272,8 @@ angular.module('neAdmin.cms',['neRest',
     '/* example: */\n'+
     '\n'+
     '// var redirects = {\n'+
-    '//    \'yourwebsite.com/somepath/\': \'302 yourwebsite.com/somepath-redirect/\',\n'+
-    '//    \'yourwebsite.com/someoldpath/\': \'301 yourwebsite.com/somepath-redirect/\'\n'+
+    '//    \'//yourwebsite.com/somepath/\': \'302 //yourwebsite.com/somepath-redirect/\',\n'+
+    '//    \'//yourwebsite.com/someoldpath/\': \'301 //yourwebsite.com/somepath-redirect/\'\n'+
     '// };\n'+
     '// return redirects[ host+pathname ] || redirects[ host+pathname+\'/\' ];\n';
 
