@@ -977,7 +977,7 @@ function install(){
         //{ route:'/', instance:'create', flags:[ 'post', 'json' ] },
         { route:'/{id}', instance:'create', flags:[ 'post', 'json' ] },
         { route:'/{id}', instance:'update', flags:[ 'put', 'json' ] },
-        { route:'/{id}', instance:'remove', afterValidation:checkTemplateUsage, success:removeTemplateFiles, flags:[ 'delete' ] },
+        { route:'/{id}', instance:'remove', afterValidation:checkTemplateUsage, success:removeTemplateFiles, flags:[ 'delete' ], length:1000 }, // 1000 kB
         
         { route:'/{id}/content', instance:'getContent', flags:[ 'get' ] },
         { route:'/{id}/updatecontent', instance:'updateContent', flags:[ 'post', 'json' ], length:1000 }, // 1000 kB
@@ -995,21 +995,40 @@ function install(){
         });
     }
     
-    function removeTemplateFiles(statusCode, resData){
-        var templateId = this.params.id;
-        if(statusCode !== 200) return;
-        
-        Model('CmsTemplate').collection().findId(templateId+'.json').one(function(err, jsonFile){
-            if(jsonFile) jsonFile.remove(function(err){
-                if(err) console.warn('Cannot remove template file "' +templateId+'.json'+ '"', err);
-            });
+    function removeTemplateFiles(statusCode, resData, cb){
+        var ctrl = this;
+        var templateId = ctrl.params.id;
+        if(statusCode !== 200) return cb();
+
+        removeJsFile(function(){
+            removeJsonFile(cb);
         });
         
-        Model('CmsTemplate').collection().findId(templateId+'.js').one(function(err, jsFile){
-            if(jsFile) jsFile.remove(function(err){
-                if(err) console.warn('Cannot remove template file "' +templateId+'.js'+ '"', err);
+        function removeJsonFile(cb){
+            Model('CmsTemplate').collection().findId(templateId+'.json').one(function(err, jsonFile){
+                if(jsonFile) jsonFile.remove(function(err){
+                    if(err) {
+                        ctrl.view500();
+                        console.warn('Cannot remove template file "' +templateId+'.json'+ '"', err);
+                    }
+                    else cb();
+                });
+                else cb();
             });
-        });
+        }
+        
+        function removeJsFile(cb){
+            Model('CmsTemplate').collection().findId(templateId+'.js').one(function(err, jsFile){
+                if(jsFile) jsFile.remove(function(err){
+                    if(err) {
+                        ctrl.view500();
+                        console.warn('Cannot remove template file "' +templateId+'.js'+ '"', err);
+                    }
+                    else cb();
+                });
+                else cb();
+            });
+        }
     }
     
     framework.route(basePath+'cms/templates/types/{type}', getList, ['get','authorize','!admin','!cms','!cmscontent']);
@@ -1527,12 +1546,15 @@ function sendGeneratedImage(req, res, w, h, bg_color, text){
     
     var imgStream = framework_image.load(new Buffer(emptyPNG, 'base64'))
     .quality(80)
-    .background(bg_color)
-    .extent(w || 150, h || 150)
+    .command('-background', bg_color)
+    .command('-extent', (w || 150)+'x'+(h || 150))
     .command('-fill','#707070') // dark-grey
     .command('-font','arial')
     .command('-pointsize', fontSize)
-    .command('-draw','gravity Center text "0,0 \''+(text || (w+' x '+h))+'\'"');
+    .command('-draw','gravity Center text "0,0 \''+(text || (w+'x'+h))+'\'"');
+
+    // TODO: enable gm limit, this is only temp solution
+    imgStream.islimit = true;
     
     sendImage(req, res, text+'_'+w+'_'+h+'_'+bg_color, imgStream, 'image/png');
 }
@@ -1648,14 +1670,17 @@ function imageRouter(req, res, isValidation) {
                         // resize image
                         var outType = (origImage.ext === 'png' || origImage.ext === 'gif') ? origImage.ext : 'jpg';
                         var imgSetup = framework_image.load(origImage.data.buffer).quality(90);
-                        if(mode==='resize') imgSetup = imgSetup.resize(resizeW, resizeH); // resize only if image is bigger than canvas
-                        if(mode==='crop') imgSetup = imgSetup.resize(cropW, cropH); // - working without crop method, maybe extent do it
+                        if(mode==='resize') imgSetup = imgSetup.command('-resize', resizeW+'x'+resizeH); // resize only if image is bigger than canvas
+                        if(mode==='crop') imgSetup = imgSetup.command('-resize', cropW+'x'+cropH); // - working without crop method, maybe extent do it
                         //if(mode==='transparent') imgSetup = imgSetup; //.transparent(color) - implement in future
-                        
+
                         imgSetup
-                        .background(bg_color)
-                        .gravity(gravityShorts[gravity] || 'center')
-                        .extent(w, h);
+                            .command('-background', bg_color)
+                            .command('-gravity', gravityShorts[gravity] || 'center')
+                            .command('-extent', w+'x'+h);
+
+                        // TODO: enable gm limit, this is only temp solution
+                        imgSetup.islimit = true;
                          
                         bufferFromStream(imgSetup.stream(outType), function(err, buffer) {
                             if(err) {
