@@ -1309,10 +1309,15 @@ function install(){
         // create and validate entry
         var entry = Model('CmsFormEntry').new({ formId:formId, data:ctrl.body });
         entry.validateData(function(err, entry, form){
-            if(err) return handleFormResponse(ctrl,entry,form)(err);
+            if(err) return handleFormResponse(ctrl, entry, form)(err);
             
             // allow CORS if it is defined
             if(form.allowCors) ctrl.cors(['*']);
+
+            var compared = {};
+            for(var key in entry.data) {
+                if(entry.data[key] !== undefined) compared[key] = 'define';
+            }
             
             if(entry.key){
                 Model('CmsFormEntry').collection().find({ formId:formId, key:entry.key }).one(function(err, oldEntry){
@@ -1320,19 +1325,19 @@ function install(){
                     if(oldEntry){
                         
                         // compare entry and oldEntry
-                        var compared = {};
+                        compared = {};
                         for(var key in entry.data){
                             if(oldEntry.data.hasOwnProperty(key)) compared[key] = oldEntry.data[key] === entry.data[key] ? null : 'change';
-                            else if(entry[key] !== undefined) compared[key] = 'define';
+                            else if(entry.data[key] !== undefined) compared[key] = 'define';
                         }
                         
                         object.extend(true, oldEntry.data, entry.data);
-                        oldEntry.update(handleFormResponse(ctrl,entry,form,compared));
+                        oldEntry.update(handleFormResponse(ctrl, entry, form, compared));
                     }
-                    else entry.create(handleFormResponse(ctrl,entry,form));
+                    else entry.create(handleFormResponse(ctrl, entry, form, compared));
                 });
             }
-            else entry.create(handleFormResponse(ctrl,entry,form));
+            else entry.create(handleFormResponse(ctrl, entry, form, compared));
         });
     }
     
@@ -1372,12 +1377,12 @@ function install(){
                     var propName = email.propName;
                     var sendOn = email.sendOn;
 
-                    if(propName && sendOn && sendOn!=='never'){
+                    if(propName && sendOn && sendOn !== 'never'){
 
                         // check if property defined / changed / always
-                        if(sendOn==='always' ||
-                           (sendOn==='define' && (!compared || compared[propName]==='define')) ||
-                           (sendOn==='change' && compared && compared[propName]==='change')){
+                        if( sendOn === 'always' ||
+                           (sendOn === 'define' && compared && compared[propName] === 'define') ||
+                           (sendOn === 'change' && compared && compared[propName] === 'change')){
 
                             (function(email){
                                 Model('CmsDocument').collection().cache().find({ url: email.documentUrl }).one(function(err, doc){

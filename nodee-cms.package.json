@@ -1,6 +1,6 @@
 {
     "name":"nodee-cms",
-    "version":"0.9.23",
+    "version":"0.9.24",
     "dependencies":[ "nodee-total", "nodee-admin" ],
     "config":{
         "admin-base-path": {
